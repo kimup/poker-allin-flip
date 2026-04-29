@@ -104,6 +104,7 @@ h2 {
 
 .mode-button,
 .ghost-button,
+.reset-button,
 .deal-button {
   min-height: 42px;
   border-radius: 8px;
@@ -163,22 +164,35 @@ h2 {
 }
 
 .player-panel.is-winner {
-  border-color: rgba(66, 209, 157, 0.88);
+  border-color: rgba(66, 209, 157, 0.96);
   background:
-    linear-gradient(135deg, rgba(66, 209, 157, 0.24), transparent),
-    rgba(16, 20, 22, 0.84);
-  box-shadow: 0 0 0 1px rgba(66, 209, 157, 0.2), 0 16px 36px rgba(0, 0, 0, 0.2);
+    linear-gradient(135deg, rgba(66, 209, 157, 0.42), rgba(241, 196, 83, 0.14)),
+    rgba(16, 20, 22, 0.9);
+  box-shadow: 0 0 0 2px rgba(66, 209, 157, 0.28), 0 18px 44px rgba(0, 0, 0, 0.3);
 }
 
 .player-panel.is-leading {
-  border-color: rgba(241, 196, 83, 0.72);
+  border-color: rgba(241, 196, 83, 0.44);
   background:
-    linear-gradient(135deg, rgba(241, 196, 83, 0.18), transparent),
-    rgba(16, 20, 22, 0.82);
-  box-shadow: 0 0 0 1px rgba(241, 196, 83, 0.16), 0 14px 30px rgba(0, 0, 0, 0.16);
+    linear-gradient(135deg, rgba(241, 196, 83, 0.09), transparent),
+    rgba(16, 20, 22, 0.78);
+  box-shadow: 0 0 0 1px rgba(241, 196, 83, 0.08), 0 10px 22px rgba(0, 0, 0, 0.12);
 }
 
 .player-panel.is-leading .equity-line {
+  color: var(--accent);
+}
+
+.player-panel.is-locked {
+  border-color: rgba(66, 209, 157, 0.96);
+  background:
+    linear-gradient(135deg, rgba(66, 209, 157, 0.38), rgba(241, 196, 83, 0.12)),
+    rgba(16, 20, 22, 0.9);
+  box-shadow: 0 0 0 2px rgba(66, 209, 157, 0.26), 0 18px 44px rgba(0, 0, 0, 0.28);
+}
+
+.player-panel.is-locked .equity-line,
+.player-panel.is-winner .equity-line {
   color: var(--green);
 }
 
@@ -311,6 +325,15 @@ h2 {
 .deal-button.is-next {
   background: var(--green);
   color: #061d14;
+}
+
+.reset-button {
+  padding: 0 14px;
+  border: 1px solid rgba(241, 196, 83, 0.34);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 900;
 }
 
 .street-meter {
@@ -461,6 +484,22 @@ h2 {
   font-size: 0.76rem;
   font-weight: 900;
   box-shadow: 0 5px 10px rgba(0, 0, 0, 0.18);
+}
+
+.mini-card.suit-s {
+  color: var(--spade);
+}
+
+.mini-card.suit-h {
+  color: var(--heart);
+}
+
+.mini-card.suit-d {
+  color: var(--diamond);
+}
+
+.mini-card.suit-c {
+  color: var(--club);
 }
 
 .history-divider {

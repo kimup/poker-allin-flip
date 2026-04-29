@@ -349,6 +349,10 @@ function setWinnerUi(winner) {
   elements.playerTwoPanel.classList.toggle("is-winner", p2Won);
   elements.playerOnePanel.classList.remove("is-leading");
   elements.playerTwoPanel.classList.remove("is-leading");
+  elements.playerOnePanel.classList.remove("is-locked");
+  elements.playerTwoPanel.classList.remove("is-locked");
+  elements.playerOneBadge.textContent = "Winner";
+  elements.playerTwoBadge.textContent = "Winner";
   elements.playerOneBadge.classList.toggle("is-hidden", !p1Won);
   elements.playerTwoBadge.classList.toggle("is-hidden", !p2Won);
 }
@@ -356,6 +360,8 @@ function setWinnerUi(winner) {
 function clearWinnerUi() {
   elements.playerOnePanel.classList.remove("is-winner");
   elements.playerTwoPanel.classList.remove("is-winner");
+  elements.playerOnePanel.classList.remove("is-locked");
+  elements.playerTwoPanel.classList.remove("is-locked");
   elements.playerOneBadge.classList.add("is-hidden");
   elements.playerTwoBadge.classList.add("is-hidden");
 }
@@ -364,11 +370,19 @@ function setLeaderUi(equity) {
   if (!equity || state.revealedBoardCount === 5) return;
 
   const margin = Math.abs(equity.player1 - equity.player2);
+  const playerOneLocked = equity.player1 >= 1;
+  const playerTwoLocked = equity.player2 >= 1;
   const playerOneLeads = equity.player1 > equity.player2 && margin >= 0.01;
   const playerTwoLeads = equity.player2 > equity.player1 && margin >= 0.01;
 
-  elements.playerOnePanel.classList.toggle("is-leading", playerOneLeads);
-  elements.playerTwoPanel.classList.toggle("is-leading", playerTwoLeads);
+  elements.playerOnePanel.classList.toggle("is-locked", playerOneLocked);
+  elements.playerTwoPanel.classList.toggle("is-locked", playerTwoLocked);
+  elements.playerOnePanel.classList.toggle("is-leading", playerOneLeads && !playerOneLocked);
+  elements.playerTwoPanel.classList.toggle("is-leading", playerTwoLeads && !playerTwoLocked);
+  elements.playerOneBadge.textContent = playerOneLocked ? "Locked" : "Winner";
+  elements.playerTwoBadge.textContent = playerTwoLocked ? "Locked" : "Winner";
+  elements.playerOneBadge.classList.toggle("is-hidden", !playerOneLocked);
+  elements.playerTwoBadge.classList.toggle("is-hidden", !playerTwoLocked);
 }
 
 function loadStoredSession() {
