@@ -33,6 +33,8 @@ const state = {
   isOpeningBoard: false,
   revealTimer: null,
   streetDelayMs: 2000,
+  handMode: "random",
+  handBannerTimer: null,
   stats: {
     player1: 0,
     player2: 0,
@@ -47,6 +49,11 @@ const elements = {
   duoModeButton: document.querySelector("#duoModeButton"),
   dealButton: document.querySelector("#dealButton"),
   streetDelaySelect: document.querySelector("#streetDelaySelect"),
+  handModeSelect: document.querySelector("#handModeSelect"),
+  playerOneHandInput: document.querySelector("#playerOneHandInput"),
+  playerTwoHandInput: document.querySelector("#playerTwoHandInput"),
+  handInputMessage: document.querySelector("#handInputMessage"),
+  handBanner: document.querySelector("#handBanner"),
   resetButton: document.querySelector("#resetButton"),
   playerOneName: document.querySelector("#playerOneName"),
   playerTwoName: document.querySelector("#playerTwoName"),
@@ -99,12 +106,59 @@ function shuffle(cards) {
 }
 
 function dealFlip() {
-  const deck = shuffle(createDeck());
+  const specified = getSpecifiedHands();
+  const knownCards = [...specified.player1, ...specified.player2];
+  const deck = shuffle(getRemainingDeck(knownCards));
   return {
-    player1: deck.slice(0, 2),
-    player2: deck.slice(2, 4),
-    board: deck.slice(4, 9),
+    player1: specified.player1.length === 2 ? specified.player1 : deck.splice(0, 2),
+    player2: specified.player2.length === 2 ? specified.player2 : deck.splice(0, 2),
+    board: deck.slice(0, 5),
   };
+}
+
+function getSpecifiedHands() {
+  if (state.handMode !== "specified") {
+    elements.handInputMessage.textContent = "";
+    return { player1: [], player2: [] };
+  }
+
+  const player1 = parseHandInput(elements.playerOneHandInput.value);
+  const player2 = parseHandInput(elements.playerTwoHandInput.value);
+  const allCards = [...player1.cards, ...player2.cards];
+  const uniqueCards = new Set(allCards.map(cardKey));
+
+  if (player1.error || player2.error || uniqueCards.size !== allCards.length) {
+    elements.handInputMessage.textContent = "指定が無効です。例: Ah Kh / Qs Qd";
+    return { player1: [], player2: [] };
+  }
+
+  elements.handInputMessage.textContent =
+    player1.cards.length || player2.cards.length ? "指定カードを使用中" : "";
+  return { player1: player1.cards, player2: player2.cards };
+}
+
+function parseHandInput(input) {
+  const normalized = input.trim();
+  if (!normalized) return { cards: [], error: false };
+
+  const parts = normalized
+    .replace(/,/g, " ")
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length !== 2) return { cards: [], error: true };
+
+  const cards = parts.map(parseCardNotation);
+  return cards.every(Boolean) ? { cards, error: false } : { cards: [], error: true };
+}
+
+function parseCardNotation(notation) {
+  const match = notation.trim().match(/^(10|[2-9TJQKA])([shdc])$/i);
+  if (!match) return null;
+
+  const rank = match[1].toUpperCase() === "10" ? "T" : match[1].toUpperCase();
+  const suit = match[2].toLowerCase();
+  return { rank, suit, value: ranks.indexOf(rank) + 2 };
 }
 
 function cardKey(card) {
@@ -339,7 +393,7 @@ function getStreetName(revealedCount) {
 
 function getActionText() {
   if (state.isOpeningBoard) return "Opening...";
-  if (state.revealedBoardCount === 5) return "Next Flip";
+  if (state.revealedBoardCount === 5) return "Next Hand";
   return "Board Open";
 }
 
@@ -420,9 +474,21 @@ function saveStoredSession() {
 
 function startFlip() {
   stopBoardOpening();
+  const hadFlip = Boolean(state.currentFlip);
   state.currentFlip = dealFlip();
   state.revealedBoardCount = 0;
+  if (hadFlip) showHandBanner();
   renderCurrentFlip();
+}
+
+function showHandBanner() {
+  elements.handBanner.classList.remove("is-hidden");
+  if (state.handBannerTimer) {
+    window.clearTimeout(state.handBannerTimer);
+  }
+  state.handBannerTimer = window.setTimeout(() => {
+    elements.handBanner.classList.add("is-hidden");
+  }, 900);
 }
 
 function handleBoardAction() {
@@ -489,8 +555,8 @@ function renderCurrentFlip() {
   const shouldCalculateEquity =
     state.revealedBoardCount === 0 || state.revealedBoardCount === 3 || state.revealedBoardCount >= 4;
   const equity = shouldCalculateEquity ? calculateEquity(flip.player1, flip.player2, visibleBoard) : null;
-  const playerOneName = state.mode === "solo" ? "You" : "A";
-  const playerTwoName = state.mode === "solo" ? "CPU" : "B";
+  const playerOneName = state.mode === "solo" ? "Hero" : "Seat 1";
+  const playerTwoName = state.mode === "solo" ? "Villain" : "Seat 2";
   const streetName = getStreetName(state.revealedBoardCount);
   const equityPrefix = equity?.isEstimate ? "推定勝率" : "勝率";
 
@@ -680,6 +746,12 @@ elements.dealButton.addEventListener("click", handleBoardAction);
 elements.streetDelaySelect.addEventListener("change", () => {
   state.streetDelayMs = Number(elements.streetDelaySelect.value) || 2000;
 });
+elements.handModeSelect.addEventListener("change", () => {
+  state.handMode = elements.handModeSelect.value;
+  startFlip();
+});
+elements.playerOneHandInput.addEventListener("change", startFlip);
+elements.playerTwoHandInput.addEventListener("change", startFlip);
 elements.resetButton.addEventListener("click", resetSession);
 elements.soloModeButton.addEventListener("click", () => requestModeChange("solo"));
 elements.duoModeButton.addEventListener("click", () => requestModeChange("duo"));

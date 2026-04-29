@@ -37,12 +37,33 @@
         </div>
       </header>
 
+      <section class="hand-settings" aria-label="ハンド設定">
+        <label>
+          <span>Hand Mode</span>
+          <select id="handModeSelect">
+            <option value="random" selected>Random</option>
+            <option value="specified">Specify</option>
+          </select>
+        </label>
+        <label>
+          <span>Hero</span>
+          <input id="playerOneHandInput" type="text" placeholder="Ah Kh" autocomplete="off" />
+        </label>
+        <label>
+          <span>Villain</span>
+          <input id="playerTwoHandInput" type="text" placeholder="Qs Qd" autocomplete="off" />
+        </label>
+        <p id="handInputMessage" class="hand-input-message"></p>
+      </section>
+
+      <div id="handBanner" class="hand-banner is-hidden" aria-live="polite">Next Hand</div>
+
       <section class="table-area" aria-label="ポーカーテーブル">
         <div class="player-grid">
           <section id="playerOnePanel" class="player-panel">
             <div class="player-heading">
               <div>
-                <h2 id="playerOneName">You</h2>
+                <h2 id="playerOneName">Hero</h2>
               </div>
               <span id="playerOneBadge" class="result-badge is-hidden">Winner</span>
             </div>
@@ -54,7 +75,7 @@
           <section id="playerTwoPanel" class="player-panel">
             <div class="player-heading">
               <div>
-                <h2 id="playerTwoName">CPU</h2>
+                <h2 id="playerTwoName">Villain</h2>
               </div>
               <span id="playerTwoBadge" class="result-badge is-hidden">Winner</span>
             </div>
@@ -90,12 +111,12 @@
 
       <section class="stats-area" aria-label="セッション統計">
         <article class="stat-card">
-          <p id="playerOneStatLabel" class="stat-label">You</p>
+          <p id="playerOneStatLabel" class="stat-label">Hero</p>
           <strong id="playerOneWins">0</strong>
           <span>wins</span>
         </article>
         <article class="stat-card">
-          <p id="playerTwoStatLabel" class="stat-label">CPU</p>
+          <p id="playerTwoStatLabel" class="stat-label">Villain</p>
           <strong id="playerTwoWins">0</strong>
           <span>wins</span>
         </article>
