@@ -133,6 +133,7 @@ h2 {
 .player-panel,
 .board-panel,
 .history-panel,
+.winner-panel,
 .stat-card {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -220,11 +221,17 @@ h2 {
 }
 
 .hand-name,
+.equity-line,
 .result-detail {
   min-height: 1.5em;
   margin: 14px 0 0;
   color: var(--muted);
   font-weight: 700;
+}
+
+.equity-line {
+  margin-top: 6px;
+  color: var(--accent);
 }
 
 .board-panel {
@@ -236,6 +243,38 @@ h2 {
   background: var(--accent);
   color: #211b0a;
   font-weight: 900;
+}
+
+.street-meter {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.street-step {
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+  text-align: center;
+}
+
+.street-step.is-active {
+  border-color: rgba(241, 196, 83, 0.88);
+  background: rgba(241, 196, 83, 0.14);
+  color: var(--accent);
+}
+
+.card.is-hidden-card {
+  border-color: rgba(255, 255, 255, 0.14);
+  background:
+    linear-gradient(135deg, rgba(241, 196, 83, 0.18), transparent),
+    repeating-linear-gradient(45deg, #202b2e, #202b2e 6px, #182023 6px, #182023 12px);
+  color: transparent;
 }
 
 .stats-area {
@@ -264,6 +303,32 @@ h2 {
 .history-panel {
   padding: 18px;
   background: rgba(24, 32, 35, 0.82);
+}
+
+.winner-panel {
+  display: grid;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 18px;
+  background: rgba(16, 20, 22, 0.9);
+}
+
+.winner-panel strong {
+  color: var(--text);
+  font-size: clamp(1.7rem, 4vw, 3.2rem);
+  line-height: 1.05;
+}
+
+.winner-panel span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.winner-panel.is-final {
+  border-color: rgba(241, 196, 83, 0.72);
+  background:
+    linear-gradient(135deg, rgba(241, 196, 83, 0.14), transparent),
+    rgba(16, 20, 22, 0.94);
 }
 
 .history-heading h2 {
@@ -339,5 +404,9 @@ h2 {
 
   .card {
     width: clamp(50px, 17vw, 72px);
+  }
+
+  .street-meter {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

@@ -35,6 +35,7 @@
             </div>
             <div id="playerOneCards" class="cards" aria-label="Player 1 hole cards"></div>
             <p id="playerOneHand" class="hand-name"></p>
+            <p id="playerOneEquity" class="equity-line"></p>
           </section>
 
           <section id="playerTwoPanel" class="player-panel">
@@ -47,6 +48,7 @@
             </div>
             <div id="playerTwoCards" class="cards" aria-label="Player 2 hole cards"></div>
             <p id="playerTwoHand" class="hand-name"></p>
+            <p id="playerTwoEquity" class="equity-line"></p>
           </section>
         </div>
 
@@ -59,18 +61,24 @@
             <button id="dealButton" class="deal-button" type="button">Next Flip</button>
           </div>
           <div id="boardCards" class="cards board-cards" aria-label="community cards"></div>
+          <div class="street-meter" aria-label="ストリート進行">
+            <span id="preflopStep" class="street-step is-active">Preflop</span>
+            <span id="flopStep" class="street-step">Flop</span>
+            <span id="turnStep" class="street-step">Turn</span>
+            <span id="riverStep" class="street-step">River</span>
+          </div>
           <p id="resultDetail" class="result-detail"></p>
         </section>
       </section>
 
       <section class="stats-area" aria-label="セッション統計">
         <article class="stat-card">
-          <p class="stat-label">Player 1</p>
+          <p id="playerOneStatLabel" class="stat-label">Player 1</p>
           <strong id="playerOneWins">0</strong>
           <span>wins</span>
         </article>
         <article class="stat-card">
-          <p class="stat-label">Player 2</p>
+          <p id="playerTwoStatLabel" class="stat-label">Player 2</p>
           <strong id="playerTwoWins">0</strong>
           <span>wins</span>
         </article>
@@ -84,6 +92,12 @@
           <strong id="winRate">0%</strong>
           <span id="flipCount">0 flips</span>
         </article>
+      </section>
+
+      <section class="winner-panel" aria-label="勝敗結果">
+        <p class="panel-label">Result</p>
+        <strong id="winnerSummary">カードを公開してください</strong>
+        <span id="winnerSubtext">勝ち数はこのブラウザに保存されます</span>
       </section>
 
       <section class="history-panel" aria-label="直近の結果">

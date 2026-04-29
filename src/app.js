@@ -24,9 +24,12 @@ const categoryNames = [
   "Four of a Kind",
   "Straight Flush",
 ];
+const storageKey = "poker-allin-flip-session";
 
 const state = {
   mode: "solo",
+  currentFlip: null,
+  revealedBoardCount: 0,
   stats: {
     player1: 0,
     player2: 0,
@@ -49,6 +52,8 @@ const elements = {
   playerTwoBadge: document.querySelector("#playerTwoBadge"),
   playerOneCards: document.querySelector("#playerOneCards"),
   playerTwoCards: document.querySelector("#playerTwoCards"),
+  playerOneEquity: document.querySelector("#playerOneEquity"),
+  playerTwoEquity: document.querySelector("#playerTwoEquity"),
   boardCards: document.querySelector("#boardCards"),
   playerOneHand: document.querySelector("#playerOneHand"),
   playerTwoHand: document.querySelector("#playerTwoHand"),
@@ -56,10 +61,19 @@ const elements = {
   resultDetail: document.querySelector("#resultDetail"),
   playerOneWins: document.querySelector("#playerOneWins"),
   playerTwoWins: document.querySelector("#playerTwoWins"),
+  playerOneStatLabel: document.querySelector("#playerOneStatLabel"),
+  playerTwoStatLabel: document.querySelector("#playerTwoStatLabel"),
   chops: document.querySelector("#chops"),
   winRate: document.querySelector("#winRate"),
   flipCount: document.querySelector("#flipCount"),
   historyList: document.querySelector("#historyList"),
+  preflopStep: document.querySelector("#preflopStep"),
+  flopStep: document.querySelector("#flopStep"),
+  turnStep: document.querySelector("#turnStep"),
+  riverStep: document.querySelector("#riverStep"),
+  winnerSummary: document.querySelector("#winnerSummary"),
+  winnerSubtext: document.querySelector("#winnerSubtext"),
+  winnerPanel: document.querySelector(".winner-panel"),
 };
 
 function createDeck() {
@@ -82,6 +96,15 @@ function dealFlip() {
     player2: deck.slice(2, 4),
     board: deck.slice(4, 9),
   };
+}
+
+function cardKey(card) {
+  return `${card.rank}${card.suit}`;
+}
+
+function getRemainingDeck(knownCards) {
+  const known = new Set(knownCards.map(cardKey));
+  return createDeck().filter((card) => !known.has(cardKey(card)));
 }
 
 function combinations(cards, size) {
@@ -176,7 +199,11 @@ function score(category, tiebreakers) {
   };
 }
 
-function evaluateSeven(cards) {
+function evaluateBest(cards) {
+  if (cards.length < 5) {
+    return null;
+  }
+
   return combinations(cards, 5)
     .map(evaluateFive)
     .sort(compareScores)
@@ -195,6 +222,40 @@ function compareScores(a, b) {
   return 0;
 }
 
+function calculateEquity(player1, player2, visibleBoard) {
+  const missingBoardCount = 5 - visibleBoard.length;
+  const knownCards = [...player1, ...player2, ...visibleBoard];
+  const remainingDeck = getRemainingDeck(knownCards);
+  const useSampling = missingBoardCount >= 5;
+  const completions = useSampling
+    ? Array.from({ length: 6000 }, () => shuffle(remainingDeck).slice(0, missingBoardCount))
+    : combinations(remainingDeck, missingBoardCount);
+  const totals = {
+    player1: 0,
+    player2: 0,
+    chops: 0,
+  };
+
+  for (const completion of completions) {
+    const board = [...visibleBoard, ...completion];
+    const score1 = evaluateBest([...player1, ...board]);
+    const score2 = evaluateBest([...player2, ...board]);
+    const comparison = compareScores(score1, score2);
+
+    if (comparison > 0) totals.player1 += 1;
+    if (comparison < 0) totals.player2 += 1;
+    if (comparison === 0) totals.chops += 1;
+  }
+
+  const total = completions.length;
+  return {
+    player1: (totals.player1 + totals.chops / 2) / total,
+    player2: (totals.player2 + totals.chops / 2) / total,
+    chops: totals.chops / total,
+    isEstimate: useSampling,
+  };
+}
+
 function renderCard(card) {
   const cardElement = document.createElement("div");
   cardElement.className = `card ${card.suit === "h" || card.suit === "d" ? "is-red" : ""}`;
@@ -209,8 +270,27 @@ function renderCard(card) {
   return cardElement;
 }
 
+function renderHiddenCard(index) {
+  const cardElement = document.createElement("div");
+  cardElement.className = "card is-hidden-card";
+  cardElement.setAttribute("aria-label", `hidden board card ${index + 1}`);
+  return cardElement;
+}
+
 function renderCards(container, cards) {
   container.replaceChildren(...cards.map(renderCard));
+}
+
+function renderBoard(cards, revealedCount) {
+  const visibleCards = cards.slice(0, revealedCount).map(renderCard);
+  const hiddenCards = Array.from({ length: 5 - revealedCount }, (_, index) =>
+    renderHiddenCard(revealedCount + index),
+  );
+  containerReplace(elements.boardCards, [...visibleCards, ...hiddenCards]);
+}
+
+function containerReplace(container, children) {
+  container.replaceChildren(...children);
 }
 
 function cardText(cards) {
@@ -221,7 +301,15 @@ function rankText(value) {
   return ranks[value - 2] || String(value);
 }
 
+function percent(value) {
+  return `${Math.round(value * 1000) / 10}%`;
+}
+
 function describeScore(scoreValue) {
+  if (!scoreValue) {
+    return "役: ボード公開待ち";
+  }
+
   if (scoreValue.category === 0 || scoreValue.category === 5) {
     return `${scoreValue.name}, ${rankText(scoreValue.tiebreakers[0])} high`;
   }
@@ -229,6 +317,23 @@ function describeScore(scoreValue) {
     return `${scoreValue.name}, ${rankText(scoreValue.tiebreakers[0])} high`;
   }
   return `${scoreValue.name} (${scoreValue.tiebreakers.map(rankText).join(", ")})`;
+}
+
+function getStreetName(revealedCount) {
+  if (revealedCount === 0) return "Preflop";
+  if (revealedCount < 3) return `Flop ${revealedCount}/3`;
+  if (revealedCount === 3) return "Flop";
+  if (revealedCount === 4) return "Turn";
+  return "River";
+}
+
+function getNextActionText(revealedCount) {
+  if (revealedCount === 0) return "Reveal Flop 1";
+  if (revealedCount === 1) return "Reveal Flop 2";
+  if (revealedCount === 2) return "Reveal Flop 3";
+  if (revealedCount === 3) return "Reveal Turn";
+  if (revealedCount === 4) return "Reveal River";
+  return "Next Flip";
 }
 
 function setWinnerUi(winner) {
@@ -241,22 +346,104 @@ function setWinnerUi(winner) {
   elements.playerTwoBadge.classList.toggle("is-hidden", !p2Won);
 }
 
-function playFlip() {
-  const flip = dealFlip();
-  const score1 = evaluateSeven([...flip.player1, ...flip.board]);
-  const score2 = evaluateSeven([...flip.player2, ...flip.board]);
+function loadStoredSession() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(storageKey));
+    if (!stored) return;
+
+    state.stats = {
+      player1: Number(stored.stats?.player1) || 0,
+      player2: Number(stored.stats?.player2) || 0,
+      chops: Number(stored.stats?.chops) || 0,
+      total: Number(stored.stats?.total) || 0,
+    };
+    state.history = Array.isArray(stored.history) ? stored.history.slice(0, 6) : [];
+  } catch {
+    localStorage.removeItem(storageKey);
+  }
+}
+
+function saveStoredSession() {
+  try {
+    localStorage.setItem(
+      storageKey,
+      JSON.stringify({
+        stats: state.stats,
+        history: state.history,
+      }),
+    );
+  } catch {
+    // Storage may be unavailable in strict private browsing modes.
+  }
+}
+
+function startFlip() {
+  state.currentFlip = dealFlip();
+  state.revealedBoardCount = 0;
+  renderCurrentFlip();
+}
+
+function advanceFlip() {
+  if (!state.currentFlip || state.revealedBoardCount === 5) {
+    startFlip();
+    return;
+  }
+
+  state.revealedBoardCount += 1;
+  renderCurrentFlip();
+}
+
+function renderCurrentFlip() {
+  const flip = state.currentFlip;
+  const visibleBoard = flip.board.slice(0, state.revealedBoardCount);
+  const score1 = evaluateBest([...flip.player1, ...visibleBoard]);
+  const score2 = evaluateBest([...flip.player2, ...visibleBoard]);
+  const equity = calculateEquity(flip.player1, flip.player2, visibleBoard);
+  const playerOneName = state.mode === "solo" ? "You" : "Player 1";
+  const playerTwoName = state.mode === "solo" ? "CPU" : "Player 2";
+  const streetName = getStreetName(state.revealedBoardCount);
+  const equityPrefix = equity.isEstimate ? "推定勝率" : "勝率";
+
+  elements.playerOneName.textContent = playerOneName;
+  elements.playerTwoName.textContent = playerTwoName;
+  elements.playerOneStatLabel.textContent = playerOneName;
+  elements.playerTwoStatLabel.textContent = playerTwoName;
+  elements.dealButton.textContent = getNextActionText(state.revealedBoardCount);
+  renderCards(elements.playerOneCards, flip.player1);
+  renderCards(elements.playerTwoCards, flip.player2);
+  renderBoard(flip.board, state.revealedBoardCount);
+  elements.playerOneHand.textContent = describeScore(score1);
+  elements.playerTwoHand.textContent = describeScore(score2);
+  elements.playerOneEquity.textContent = `${equityPrefix}: ${percent(equity.player1)}`;
+  elements.playerTwoEquity.textContent = `${equityPrefix}: ${percent(equity.player2)}`;
+  renderStreetMeter(state.revealedBoardCount);
+
+  if (state.revealedBoardCount < 5) {
+    elements.resultTitle.textContent = `${streetName}: ${playerOneName} ${percent(equity.player1)} / ${playerTwoName} ${percent(equity.player2)}`;
+    elements.resultDetail.textContent =
+      equity.chops > 0
+        ? `Chop chance ${percent(equity.chops)}`
+        : "カードを1枚ずつ公開して勝率と現在の役を更新します。";
+    elements.winnerSummary.textContent = "カードを公開してください";
+    elements.winnerSubtext.textContent = `${streetName} 時点の勝率を表示中`;
+    elements.winnerPanel.classList.remove("is-final");
+    setWinnerUi(null);
+    return;
+  }
+
+  finishFlip(flip, score1, score2, playerOneName, playerTwoName);
+}
+
+function finishFlip(flip, score1, score2, playerOneName, playerTwoName) {
   const comparison = compareScores(score1, score2);
   const winner = comparison > 0 ? "player1" : comparison < 0 ? "player2" : "chop";
+  const resultTitle =
+    winner === "chop" ? "Chop pot" : `${winner === "player1" ? playerOneName : playerTwoName} wins`;
 
   state.stats.total += 1;
   if (winner === "player1") state.stats.player1 += 1;
   if (winner === "player2") state.stats.player2 += 1;
   if (winner === "chop") state.stats.chops += 1;
-
-  const playerOneName = state.mode === "solo" ? "You" : "Player 1";
-  const playerTwoName = state.mode === "solo" ? "CPU" : "Player 2";
-  const resultTitle =
-    winner === "chop" ? "Chop pot" : `${winner === "player1" ? playerOneName : playerTwoName} wins`;
 
   state.history.unshift({
     title: resultTitle,
@@ -264,23 +451,25 @@ function playFlip() {
   });
   state.history = state.history.slice(0, 6);
 
-  elements.playerOneName.textContent = playerOneName;
-  elements.playerTwoName.textContent = playerTwoName;
-  renderCards(elements.playerOneCards, flip.player1);
-  renderCards(elements.playerTwoCards, flip.player2);
-  renderCards(elements.boardCards, flip.board);
-  elements.playerOneHand.textContent = describeScore(score1);
-  elements.playerTwoHand.textContent = describeScore(score2);
   elements.resultTitle.textContent = resultTitle;
-  elements.resultDetail.textContent =
+  elements.resultDetail.textContent = winner === "chop" ? "引き分け" : "勝敗が確定しました";
+  elements.winnerSummary.textContent = resultTitle;
+  elements.winnerSubtext.textContent =
     winner === "chop"
-      ? `${describeScore(score1)}で引き分け`
-      : `${winner === "player1" ? playerOneName : playerTwoName} takes it with ${
-          winner === "player1" ? describeScore(score1) : describeScore(score2)
-        }`;
+      ? "引き分けを記録しました"
+      : "勝ち数を記録しました";
+  elements.winnerPanel.classList.add("is-final");
   setWinnerUi(winner);
   renderStats();
   renderHistory();
+  saveStoredSession();
+}
+
+function renderStreetMeter(revealedCount) {
+  elements.preflopStep.classList.toggle("is-active", revealedCount === 0);
+  elements.flopStep.classList.toggle("is-active", revealedCount > 0 && revealedCount <= 3);
+  elements.turnStep.classList.toggle("is-active", revealedCount === 4);
+  elements.riverStep.classList.toggle("is-active", revealedCount === 5);
 }
 
 function renderStats() {
@@ -298,7 +487,7 @@ function renderHistory() {
   if (state.history.length === 0) {
     const empty = document.createElement("li");
     empty.className = "history-item";
-    empty.textContent = "No flips yet";
+    empty.textContent = "No completed flips yet";
     elements.historyList.replaceChildren(empty);
     return;
   }
@@ -316,7 +505,7 @@ function setMode(mode) {
   state.mode = mode;
   elements.soloModeButton.classList.toggle("is-active", mode === "solo");
   elements.duoModeButton.classList.toggle("is-active", mode === "duo");
-  playFlip();
+  startFlip();
 }
 
 function resetSession() {
@@ -327,16 +516,18 @@ function resetSession() {
     total: 0,
   };
   state.history = [];
+  saveStoredSession();
   renderStats();
   renderHistory();
-  playFlip();
+  startFlip();
 }
 
-elements.dealButton.addEventListener("click", playFlip);
+elements.dealButton.addEventListener("click", advanceFlip);
 elements.resetButton.addEventListener("click", resetSession);
 elements.soloModeButton.addEventListener("click", () => setMode("solo"));
 elements.duoModeButton.addEventListener("click", () => setMode("duo"));
 
+loadStoredSession();
 renderStats();
 renderHistory();
-playFlip();
+startFlip();
