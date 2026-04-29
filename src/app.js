@@ -466,21 +466,14 @@ function renderCurrentFlip() {
   elements.playerOneHand.textContent = describeScore(score1);
   elements.playerTwoHand.textContent = describeScore(score2);
   if (equity) {
-    elements.playerOneEquity.textContent = `${equityPrefix}: ${percent(equity.player1)}`;
-    elements.playerTwoEquity.textContent = `${equityPrefix}: ${percent(equity.player2)}`;
+    elements.playerOneEquity.textContent = `${equityPrefix} ${percent(equity.player1)}`;
+    elements.playerTwoEquity.textContent = `${equityPrefix} ${percent(equity.player2)}`;
   }
   renderStreetMeter(state.revealedBoardCount);
 
   if (state.revealedBoardCount < 5) {
-    elements.resultTitle.textContent = equity
-      ? `${streetName}: ${playerOneName} ${percent(equity.player1)} / ${playerTwoName} ${percent(equity.player2)}`
-      : `${streetName}: フロップ公開中`;
-    elements.resultDetail.textContent =
-      equity?.chops > 0
-        ? `Chop chance ${percent(equity.chops)}`
-        : state.revealedBoardCount > 0 && state.revealedBoardCount < 3
-          ? "フロップ3枚が開いたら勝率を更新します。"
-          : "カードを1枚ずつ公開して勝率と現在の役を更新します。";
+    elements.resultTitle.textContent = streetName;
+    elements.resultDetail.textContent = "";
     elements.winnerSummary.textContent = "カードを公開してください";
     elements.winnerSubtext.textContent = `${streetName} 時点の勝率を表示中`;
     elements.winnerPanel.classList.remove("is-final");

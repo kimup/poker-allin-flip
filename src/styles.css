@@ -42,7 +42,7 @@ button {
 .app-shell {
   width: min(1180px, calc(100vw - 32px));
   margin: 0 auto;
-  padding: 28px 0;
+  padding: 18px 0;
 }
 
 .topbar,
@@ -56,7 +56,7 @@ button {
 }
 
 .topbar {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .eyebrow,
@@ -77,7 +77,7 @@ h2 {
 }
 
 h1 {
-  font-size: clamp(2rem, 4vw, 4.25rem);
+  font-size: clamp(1.8rem, 3.4vw, 3.4rem);
   line-height: 1;
 }
 
@@ -117,8 +117,8 @@ h2 {
 
 .table-area {
   display: grid;
-  gap: 18px;
-  padding: 20px;
+  gap: 12px;
+  padding: 14px;
   border: 1px solid rgba(241, 196, 83, 0.22);
   border-radius: 16px;
   background:
@@ -130,7 +130,7 @@ h2 {
 .player-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  gap: 12px;
 }
 
 .player-panel,
@@ -146,7 +146,7 @@ h2 {
 
 .player-panel {
   min-width: 0;
-  padding: 18px;
+  padding: 14px;
   transition:
     border-color 160ms ease,
     transform 160ms ease,
@@ -175,8 +175,8 @@ h2 {
 .cards {
   display: flex;
   gap: 10px;
-  min-height: 132px;
-  margin-top: 18px;
+  min-height: 108px;
+  margin-top: 12px;
 }
 
 .board-cards {
@@ -193,7 +193,7 @@ h2 {
   position: relative;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  width: clamp(58px, 8vw, 88px);
+  width: clamp(52px, 7vw, 76px);
   aspect-ratio: 0.68;
   padding: 9px;
   border: 1px solid rgba(0, 0, 0, 0.22);
@@ -242,21 +242,27 @@ h2 {
 }
 
 .hand-name,
-.equity-line,
-.result-detail {
+.equity-line {
   min-height: 1.5em;
-  margin: 14px 0 0;
+  margin: 10px 0 0;
   color: var(--muted);
   font-weight: 700;
 }
 
+.result-detail {
+  display: none;
+}
+
 .equity-line {
-  margin-top: 6px;
+  margin-top: 4px;
   color: var(--accent);
+  font-size: clamp(1.5rem, 3vw, 2.45rem);
+  font-weight: 950;
+  line-height: 1;
 }
 
 .board-panel {
-  padding: 18px;
+  padding: 14px;
 }
 
 .deal-button {
@@ -285,12 +291,12 @@ h2 {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
-  margin-top: 16px;
+  margin-top: 10px;
 }
 
 .street-step {
   min-width: 0;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
   color: var(--muted);
@@ -317,11 +323,11 @@ h2 {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 12px;
-  margin: 18px 0;
+  margin: 12px 0;
 }
 
 .stat-card {
-  padding: 16px;
+  padding: 12px;
 }
 
 .stat-card strong {
@@ -343,15 +349,15 @@ h2 {
 
 .winner-panel {
   display: grid;
-  gap: 8px;
-  margin: 18px 0;
-  padding: 18px;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 14px;
   background: rgba(16, 20, 22, 0.9);
 }
 
 .winner-panel strong {
   color: var(--text);
-  font-size: clamp(1.7rem, 4vw, 3.2rem);
+  font-size: clamp(1.5rem, 3.4vw, 2.7rem);
   line-height: 1.05;
 }
 
