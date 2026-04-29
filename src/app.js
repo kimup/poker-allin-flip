@@ -30,6 +30,8 @@ const state = {
   mode: "solo",
   currentFlip: null,
   revealedBoardCount: 0,
+  isOpeningBoard: false,
+  revealTimer: null,
   stats: {
     player1: 0,
     player2: 0,
@@ -327,13 +329,10 @@ function getStreetName(revealedCount) {
   return "River";
 }
 
-function getNextActionText(revealedCount) {
-  if (revealedCount === 0) return "Reveal Flop 1";
-  if (revealedCount === 1) return "Reveal Flop 2";
-  if (revealedCount === 2) return "Reveal Flop 3";
-  if (revealedCount === 3) return "Reveal Turn";
-  if (revealedCount === 4) return "Reveal River";
-  return "Next Flip";
+function getActionText() {
+  if (state.isOpeningBoard) return "Opening...";
+  if (state.revealedBoardCount === 5) return "Next Flip";
+  return "Board Open";
 }
 
 function setWinnerUi(winner) {
@@ -378,19 +377,59 @@ function saveStoredSession() {
 }
 
 function startFlip() {
+  stopBoardOpening();
   state.currentFlip = dealFlip();
   state.revealedBoardCount = 0;
   renderCurrentFlip();
 }
 
-function advanceFlip() {
+function handleBoardAction() {
+  if (state.isOpeningBoard) return;
+
   if (!state.currentFlip || state.revealedBoardCount === 5) {
     startFlip();
     return;
   }
 
+  openBoardAutomatically();
+}
+
+function openBoardAutomatically() {
+  state.isOpeningBoard = true;
+  renderActionButton();
+  revealNextBoardCard();
+  state.revealTimer = window.setInterval(revealNextBoardCard, 760);
+}
+
+function revealNextBoardCard() {
+  if (state.revealedBoardCount >= 5) {
+    stopBoardOpening();
+    renderCurrentFlip();
+    return;
+  }
+
   state.revealedBoardCount += 1;
   renderCurrentFlip();
+
+  if (state.revealedBoardCount === 5) {
+    stopBoardOpening();
+    renderActionButton();
+  }
+}
+
+function stopBoardOpening() {
+  if (state.revealTimer) {
+    window.clearInterval(state.revealTimer);
+  }
+  state.revealTimer = null;
+  state.isOpeningBoard = false;
+}
+
+function renderActionButton() {
+  elements.dealButton.textContent = getActionText();
+  elements.dealButton.disabled = state.isOpeningBoard;
+  elements.dealButton.classList.toggle("is-opening", state.isOpeningBoard);
+  elements.dealButton.classList.toggle("is-next", !state.isOpeningBoard && state.revealedBoardCount === 5);
 }
 
 function renderCurrentFlip() {
@@ -408,7 +447,7 @@ function renderCurrentFlip() {
   elements.playerTwoName.textContent = playerTwoName;
   elements.playerOneStatLabel.textContent = playerOneName;
   elements.playerTwoStatLabel.textContent = playerTwoName;
-  elements.dealButton.textContent = getNextActionText(state.revealedBoardCount);
+  renderActionButton();
   renderCards(elements.playerOneCards, flip.player1);
   renderCards(elements.playerTwoCards, flip.player2);
   renderBoard(flip.board, state.revealedBoardCount);
@@ -451,8 +490,8 @@ function finishFlip(flip, score1, score2, playerOneName, playerTwoName) {
   });
   state.history = state.history.slice(0, 6);
 
-  elements.resultTitle.textContent = resultTitle;
-  elements.resultDetail.textContent = winner === "chop" ? "引き分け" : "勝敗が確定しました";
+  elements.resultTitle.textContent = "River";
+  elements.resultDetail.textContent = "";
   elements.winnerSummary.textContent = resultTitle;
   elements.winnerSubtext.textContent =
     winner === "chop"
@@ -522,7 +561,7 @@ function resetSession() {
   startFlip();
 }
 
-elements.dealButton.addEventListener("click", advanceFlip);
+elements.dealButton.addEventListener("click", handleBoardAction);
 elements.resetButton.addEventListener("click", resetSession);
 elements.soloModeButton.addEventListener("click", () => setMode("solo"));
 elements.duoModeButton.addEventListener("click", () => setMode("duo"));

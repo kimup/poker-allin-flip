@@ -178,6 +178,12 @@ h2 {
 
 .board-cards {
   flex-wrap: wrap;
+  gap: 8px;
+}
+
+.board-cards .card:nth-child(3),
+.board-cards .card:nth-child(4) {
+  margin-right: clamp(16px, 3vw, 34px);
 }
 
 .card {
@@ -239,10 +245,25 @@ h2 {
 }
 
 .deal-button {
-  padding: 0 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 164px;
+  padding: 0 22px;
   background: var(--accent);
   color: #211b0a;
   font-weight: 900;
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.24);
+}
+
+.deal-button.is-opening {
+  background: rgba(241, 196, 83, 0.58);
+  cursor: wait;
+}
+
+.deal-button.is-next {
+  background: var(--green);
+  color: #061d14;
 }
 
 .street-meter {
@@ -404,6 +425,11 @@ h2 {
 
   .card {
     width: clamp(50px, 17vw, 72px);
+  }
+
+  .board-cards .card:nth-child(3),
+  .board-cards .card:nth-child(4) {
+    margin-right: clamp(10px, 5vw, 22px);
   }
 
   .street-meter {
