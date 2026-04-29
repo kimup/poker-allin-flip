@@ -35,6 +35,11 @@ const state = {
   streetDelayMs: 2000,
   handMode: "random",
   handBannerTimer: null,
+  activeHandTarget: "player1",
+  selectedHands: {
+    player1: [],
+    player2: [],
+  },
   stats: {
     player1: 0,
     player2: 0,
@@ -49,9 +54,13 @@ const elements = {
   duoModeButton: document.querySelector("#duoModeButton"),
   dealButton: document.querySelector("#dealButton"),
   streetDelaySelect: document.querySelector("#streetDelaySelect"),
+  handSettings: document.querySelector("#handSettings"),
   handModeSelect: document.querySelector("#handModeSelect"),
-  playerOneHandInput: document.querySelector("#playerOneHandInput"),
-  playerTwoHandInput: document.querySelector("#playerTwoHandInput"),
+  heroTargetButton: document.querySelector("#heroTargetButton"),
+  villainTargetButton: document.querySelector("#villainTargetButton"),
+  clearHandsButton: document.querySelector("#clearHandsButton"),
+  selectedHands: document.querySelector("#selectedHands"),
+  cardPicker: document.querySelector("#cardPicker"),
   handInputMessage: document.querySelector("#handInputMessage"),
   handBanner: document.querySelector("#handBanner"),
   resetButton: document.querySelector("#resetButton"),
@@ -122,43 +131,14 @@ function getSpecifiedHands() {
     return { player1: [], player2: [] };
   }
 
-  const player1 = parseHandInput(elements.playerOneHandInput.value);
-  const player2 = parseHandInput(elements.playerTwoHandInput.value);
-  const allCards = [...player1.cards, ...player2.cards];
-  const uniqueCards = new Set(allCards.map(cardKey));
-
-  if (player1.error || player2.error || uniqueCards.size !== allCards.length) {
-    elements.handInputMessage.textContent = "指定が無効です。例: Ah Kh / Qs Qd";
-    return { player1: [], player2: [] };
-  }
-
+  const player1 = state.selectedHands.player1.length === 2 ? state.selectedHands.player1 : [];
+  const player2 = state.selectedHands.player2.length === 2 ? state.selectedHands.player2 : [];
   elements.handInputMessage.textContent =
-    player1.cards.length || player2.cards.length ? "指定カードを使用中" : "";
-  return { player1: player1.cards, player2: player2.cards };
-}
-
-function parseHandInput(input) {
-  const normalized = input.trim();
-  if (!normalized) return { cards: [], error: false };
-
-  const parts = normalized
-    .replace(/,/g, " ")
-    .split(/\s+/)
-    .filter(Boolean);
-
-  if (parts.length !== 2) return { cards: [], error: true };
-
-  const cards = parts.map(parseCardNotation);
-  return cards.every(Boolean) ? { cards, error: false } : { cards: [], error: true };
-}
-
-function parseCardNotation(notation) {
-  const match = notation.trim().match(/^(10|[2-9TJQKA])([shdc])$/i);
-  if (!match) return null;
-
-  const rank = match[1].toUpperCase() === "10" ? "T" : match[1].toUpperCase();
-  const suit = match[2].toLowerCase();
-  return { rank, suit, value: ranks.indexOf(rank) + 2 };
+    player1.length || player2.length ? "2枚揃ったハンドだけ指定として使用中" : "";
+  return {
+    player1: [...player1],
+    player2: [...player2],
+  };
 }
 
 function cardKey(card) {
@@ -472,12 +452,12 @@ function saveStoredSession() {
   }
 }
 
-function startFlip() {
+function startFlip(options = {}) {
   stopBoardOpening();
   const hadFlip = Boolean(state.currentFlip);
   state.currentFlip = dealFlip();
   state.revealedBoardCount = 0;
-  if (hadFlip) showHandBanner();
+  if (hadFlip && options.showBanner) showHandBanner();
   renderCurrentFlip();
 }
 
@@ -495,7 +475,7 @@ function handleBoardAction() {
   if (state.isOpeningBoard) return;
 
   if (!state.currentFlip || state.revealedBoardCount === 5) {
-    startFlip();
+    startFlip({ showBanner: true });
     return;
   }
 
@@ -699,6 +679,71 @@ function renderHistoryDivider(text) {
   return divider;
 }
 
+function renderCardPicker() {
+  const specified = state.handMode === "specified";
+  elements.handSettings.classList.toggle("is-specified", specified);
+  elements.cardPicker.classList.toggle("is-hidden", !specified);
+  elements.heroTargetButton.classList.toggle("is-active", state.activeHandTarget === "player1");
+  elements.villainTargetButton.classList.toggle("is-active", state.activeHandTarget === "player2");
+
+  if (!specified) {
+    elements.selectedHands.textContent = "";
+    elements.cardPicker.replaceChildren();
+    return;
+  }
+
+  elements.selectedHands.textContent = `Hero: ${formatSelectedHand(state.selectedHands.player1)} / Villain: ${formatSelectedHand(state.selectedHands.player2)}`;
+  const selectedKeys = new Set([...state.selectedHands.player1, ...state.selectedHands.player2].map(cardKey));
+  const pickerCards = createDeck().map((card) => {
+    const button = document.createElement("button");
+    const key = cardKey(card);
+    button.type = "button";
+    button.className = `picker-card suit-${card.suit}`;
+    button.textContent = `${rankLabels[card.rank] || card.rank}${suitSymbols[card.suit]}`;
+    button.classList.toggle("is-selected", selectedKeys.has(key));
+    button.addEventListener("click", () => toggleSpecifiedCard(card));
+    return button;
+  });
+  elements.cardPicker.replaceChildren(...pickerCards);
+}
+
+function formatSelectedHand(cards) {
+  return cards.length ? cards.map(cardKey).join(" ") : "Random";
+}
+
+function toggleSpecifiedCard(card) {
+  if (state.handMode !== "specified") return;
+
+  const target = state.activeHandTarget;
+  const other = target === "player1" ? "player2" : "player1";
+  const key = cardKey(card);
+  state.selectedHands[other] = state.selectedHands[other].filter((selected) => cardKey(selected) !== key);
+  const alreadySelected = state.selectedHands[target].some((selected) => cardKey(selected) === key);
+
+  if (alreadySelected) {
+    state.selectedHands[target] = state.selectedHands[target].filter((selected) => cardKey(selected) !== key);
+  } else {
+    state.selectedHands[target] = [...state.selectedHands[target], card].slice(-2);
+  }
+
+  renderCardPicker();
+  startFlip();
+}
+
+function setHandTarget(target) {
+  state.activeHandTarget = target;
+  renderCardPicker();
+}
+
+function clearSpecifiedHands() {
+  state.selectedHands = {
+    player1: [],
+    player2: [],
+  };
+  renderCardPicker();
+  startFlip();
+}
+
 function setMode(mode) {
   state.mode = mode;
   elements.soloModeButton.classList.toggle("is-active", mode === "solo");
@@ -748,10 +793,12 @@ elements.streetDelaySelect.addEventListener("change", () => {
 });
 elements.handModeSelect.addEventListener("change", () => {
   state.handMode = elements.handModeSelect.value;
+  renderCardPicker();
   startFlip();
 });
-elements.playerOneHandInput.addEventListener("change", startFlip);
-elements.playerTwoHandInput.addEventListener("change", startFlip);
+elements.heroTargetButton.addEventListener("click", () => setHandTarget("player1"));
+elements.villainTargetButton.addEventListener("click", () => setHandTarget("player2"));
+elements.clearHandsButton.addEventListener("click", clearSpecifiedHands);
 elements.resetButton.addEventListener("click", resetSession);
 elements.soloModeButton.addEventListener("click", () => requestModeChange("solo"));
 elements.duoModeButton.addEventListener("click", () => requestModeChange("duo"));
@@ -759,6 +806,7 @@ elements.modeCancelButton.addEventListener("click", closeModeDialog);
 elements.modeConfirmButton.addEventListener("click", confirmModeChange);
 
 loadStoredSession();
+renderCardPicker();
 renderStats();
 renderHistory();
 startFlip();

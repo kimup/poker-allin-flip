@@ -67,7 +67,7 @@ button {
 
 .hand-settings {
   display: grid;
-  grid-template-columns: minmax(110px, 0.7fr) repeat(2, minmax(120px, 1fr)) minmax(160px, 1.2fr);
+  grid-template-columns: minmax(110px, 0.7fr) minmax(180px, 1fr) minmax(220px, 1.4fr) minmax(160px, 1fr);
   gap: 10px;
   align-items: end;
   margin-bottom: 12px;
@@ -86,7 +86,6 @@ button {
   text-transform: uppercase;
 }
 
-.hand-settings input,
 .hand-settings select {
   min-height: 36px;
   border: 1px solid var(--line);
@@ -97,8 +96,37 @@ button {
   text-transform: none;
 }
 
-.hand-settings input {
+.hand-targets {
+  display: flex;
+  gap: 6px;
+}
+
+.hand-settings:not(.is-specified) .hand-targets,
+.hand-settings:not(.is-specified) .selected-hands,
+.hand-settings:not(.is-specified) .hand-input-message {
+  display: none;
+}
+
+.target-button {
+  min-height: 36px;
   padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--muted);
+  font-weight: 900;
+}
+
+.target-button.is-active {
+  border-color: rgba(241, 196, 83, 0.8);
+  background: rgba(241, 196, 83, 0.16);
+  color: var(--accent);
+}
+
+.selected-hands {
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 800;
 }
 
 .hand-input-message {
@@ -107,6 +135,36 @@ button {
   color: var(--accent);
   font-size: 0.82rem;
   font-weight: 800;
+}
+
+.card-picker {
+  display: grid;
+  grid-template-columns: repeat(13, minmax(34px, 1fr));
+  gap: 5px;
+  margin: -4px 0 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(16, 20, 22, 0.58);
+}
+
+.card-picker.is-hidden {
+  display: none;
+}
+
+.picker-card {
+  min-height: 34px;
+  border: 1px solid rgba(0, 0, 0, 0.22);
+  border-radius: 6px;
+  background: #fffaf0;
+  color: var(--black);
+  font-size: 0.82rem;
+  font-weight: 900;
+}
+
+.picker-card.is-selected {
+  outline: 3px solid var(--accent);
+  outline-offset: 1px;
 }
 
 .hand-banner {
@@ -336,6 +394,22 @@ h2 {
 }
 
 .card.suit-c {
+  color: var(--club);
+}
+
+.picker-card.suit-s {
+  color: var(--spade);
+}
+
+.picker-card.suit-h {
+  color: var(--heart);
+}
+
+.picker-card.suit-d {
+  color: var(--diamond);
+}
+
+.picker-card.suit-c {
   color: var(--club);
 }
 
@@ -663,6 +737,10 @@ h2 {
 
   .hand-settings {
     grid-template-columns: 1fr;
+  }
+
+  .card-picker {
+    grid-template-columns: repeat(8, minmax(34px, 1fr));
   }
 
   .table-area {

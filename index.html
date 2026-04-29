@@ -37,7 +37,7 @@
         </div>
       </header>
 
-      <section class="hand-settings" aria-label="ハンド設定">
+      <section id="handSettings" class="hand-settings" aria-label="ハンド設定">
         <label>
           <span>Hand Mode</span>
           <select id="handModeSelect">
@@ -45,16 +45,15 @@
             <option value="specified">Specify</option>
           </select>
         </label>
-        <label>
-          <span>Hero</span>
-          <input id="playerOneHandInput" type="text" placeholder="Ah Kh" autocomplete="off" />
-        </label>
-        <label>
-          <span>Villain</span>
-          <input id="playerTwoHandInput" type="text" placeholder="Qs Qd" autocomplete="off" />
-        </label>
+        <div class="hand-targets" role="group" aria-label="指定するハンド">
+          <button id="heroTargetButton" class="target-button is-active" type="button">Hero</button>
+          <button id="villainTargetButton" class="target-button" type="button">Villain</button>
+          <button id="clearHandsButton" class="target-button" type="button">Clear</button>
+        </div>
+        <div id="selectedHands" class="selected-hands"></div>
         <p id="handInputMessage" class="hand-input-message"></p>
       </section>
+      <section id="cardPicker" class="card-picker is-hidden" aria-label="カード一覧"></section>
 
       <div id="handBanner" class="hand-banner is-hidden" aria-live="polite">Next Hand</div>
 
