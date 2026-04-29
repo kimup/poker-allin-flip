@@ -17,9 +17,12 @@
           <p class="eyebrow">Texas Hold'em All-in Flip</p>
           <h1>Poker All-in Flip</h1>
         </div>
-        <div class="mode-switch" role="group" aria-label="モード切替">
-          <button id="soloModeButton" class="mode-button is-active" type="button">1人</button>
-          <button id="duoModeButton" class="mode-button" type="button">2人</button>
+        <div class="top-actions">
+          <button id="dealButton" class="deal-button" type="button">Board Open</button>
+          <div class="mode-switch" role="group" aria-label="モード切替">
+            <button id="soloModeButton" class="mode-button is-active" type="button">1人</button>
+            <button id="duoModeButton" class="mode-button" type="button">2人</button>
+          </div>
         </div>
       </header>
 
@@ -28,12 +31,11 @@
           <section id="playerOnePanel" class="player-panel is-winner">
             <div class="player-heading">
               <div>
-                <p class="panel-label">Player 1</p>
                 <h2 id="playerOneName">You</h2>
               </div>
               <span id="playerOneBadge" class="result-badge">Winner</span>
             </div>
-            <div id="playerOneCards" class="cards" aria-label="Player 1 hole cards"></div>
+            <div id="playerOneCards" class="cards" aria-label="first hand hole cards"></div>
             <p id="playerOneHand" class="hand-name"></p>
             <p id="playerOneEquity" class="equity-line"></p>
           </section>
@@ -41,12 +43,11 @@
           <section id="playerTwoPanel" class="player-panel">
             <div class="player-heading">
               <div>
-                <p class="panel-label">Player 2</p>
                 <h2 id="playerTwoName">CPU</h2>
               </div>
               <span id="playerTwoBadge" class="result-badge is-hidden">Winner</span>
             </div>
-            <div id="playerTwoCards" class="cards" aria-label="Player 2 hole cards"></div>
+            <div id="playerTwoCards" class="cards" aria-label="second hand hole cards"></div>
             <p id="playerTwoHand" class="hand-name"></p>
             <p id="playerTwoEquity" class="equity-line"></p>
           </section>
@@ -58,7 +59,6 @@
               <p class="panel-label">Board</p>
               <h2 id="resultTitle">Preflop</h2>
             </div>
-            <button id="dealButton" class="deal-button" type="button">Board Open</button>
           </div>
           <div id="boardCards" class="cards board-cards" aria-label="community cards"></div>
           <div class="street-meter" aria-label="ストリート進行">
@@ -73,18 +73,18 @@
 
       <section class="winner-panel" aria-label="勝敗結果">
         <p class="panel-label">Result</p>
-        <strong id="winnerSummary">カードを公開してください</strong>
-        <span id="winnerSubtext">勝ち数はこのブラウザに保存されます</span>
+        <strong id="winnerSummary">-</strong>
+        <span id="winnerSubtext"></span>
       </section>
 
       <section class="stats-area" aria-label="セッション統計">
         <article class="stat-card">
-          <p id="playerOneStatLabel" class="stat-label">Player 1</p>
+          <p id="playerOneStatLabel" class="stat-label">You</p>
           <strong id="playerOneWins">0</strong>
           <span>wins</span>
         </article>
         <article class="stat-card">
-          <p id="playerTwoStatLabel" class="stat-label">Player 2</p>
+          <p id="playerTwoStatLabel" class="stat-label">CPU</p>
           <strong id="playerTwoWins">0</strong>
           <span>wins</span>
         </article>
@@ -94,7 +94,7 @@
           <span>ties</span>
         </article>
         <article class="stat-card">
-          <p class="stat-label">Player 1 Win Rate</p>
+          <p class="stat-label">Win Rate</p>
           <strong id="winRate">0%</strong>
           <span id="flipCount">0 flips</span>
         </article>

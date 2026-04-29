@@ -450,8 +450,8 @@ function renderCurrentFlip() {
   const shouldCalculateEquity =
     state.revealedBoardCount === 0 || state.revealedBoardCount === 3 || state.revealedBoardCount >= 4;
   const equity = shouldCalculateEquity ? calculateEquity(flip.player1, flip.player2, visibleBoard) : null;
-  const playerOneName = state.mode === "solo" ? "You" : "Player 1";
-  const playerTwoName = state.mode === "solo" ? "CPU" : "Player 2";
+  const playerOneName = state.mode === "solo" ? "You" : "A";
+  const playerTwoName = state.mode === "solo" ? "CPU" : "B";
   const streetName = getStreetName(state.revealedBoardCount);
   const equityPrefix = equity?.isEstimate ? "推定勝率" : "勝率";
 
@@ -474,8 +474,8 @@ function renderCurrentFlip() {
   if (state.revealedBoardCount < 5) {
     elements.resultTitle.textContent = streetName;
     elements.resultDetail.textContent = "";
-    elements.winnerSummary.textContent = "カードを公開してください";
-    elements.winnerSubtext.textContent = `${streetName} 時点の勝率を表示中`;
+    elements.winnerSummary.textContent = "-";
+    elements.winnerSubtext.textContent = "";
     elements.winnerPanel.classList.remove("is-final");
     setWinnerUi(null);
     return;
