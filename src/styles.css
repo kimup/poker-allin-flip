@@ -164,7 +164,22 @@ h2 {
 
 .player-panel.is-winner {
   border-color: rgba(66, 209, 157, 0.88);
-  box-shadow: 0 0 0 1px rgba(66, 209, 157, 0.16), 0 16px 36px rgba(0, 0, 0, 0.18);
+  background:
+    linear-gradient(135deg, rgba(66, 209, 157, 0.24), transparent),
+    rgba(16, 20, 22, 0.84);
+  box-shadow: 0 0 0 1px rgba(66, 209, 157, 0.2), 0 16px 36px rgba(0, 0, 0, 0.2);
+}
+
+.player-panel.is-leading {
+  border-color: rgba(241, 196, 83, 0.72);
+  background:
+    linear-gradient(135deg, rgba(241, 196, 83, 0.18), transparent),
+    rgba(16, 20, 22, 0.82);
+  box-shadow: 0 0 0 1px rgba(241, 196, 83, 0.16), 0 14px 30px rgba(0, 0, 0, 0.16);
+}
+
+.player-panel.is-leading .equity-line {
+  color: var(--green);
 }
 
 .result-badge {
@@ -409,8 +424,7 @@ h2 {
 
 .history-item {
   display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
+  gap: 8px;
   padding: 12px;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
@@ -420,6 +434,83 @@ h2 {
 
 .history-item strong {
   color: var(--text);
+}
+
+.history-cards {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.mini-card-group {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.mini-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 34px;
+  padding: 0 4px;
+  border-radius: 5px;
+  background: #fffaf0;
+  color: var(--black);
+  font-size: 0.76rem;
+  font-weight: 900;
+  box-shadow: 0 5px 10px rgba(0, 0, 0, 0.18);
+}
+
+.history-divider {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 900;
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.62);
+}
+
+.dialog-backdrop.is-hidden {
+  display: none;
+}
+
+.dialog-panel {
+  width: min(420px, 100%);
+  padding: 20px;
+  border: 1px solid rgba(241, 196, 83, 0.34);
+  border-radius: 8px;
+  background: #182023;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.45);
+}
+
+.dialog-panel p {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.dialog-primary-button {
+  min-height: 42px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: var(--accent);
+  color: #211b0a;
+  font-weight: 900;
 }
 
 @media (max-width: 780px) {

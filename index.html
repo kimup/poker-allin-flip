@@ -28,12 +28,12 @@
 
       <section class="table-area" aria-label="ポーカーテーブル">
         <div class="player-grid">
-          <section id="playerOnePanel" class="player-panel is-winner">
+          <section id="playerOnePanel" class="player-panel">
             <div class="player-heading">
               <div>
                 <h2 id="playerOneName">You</h2>
               </div>
-              <span id="playerOneBadge" class="result-badge">Winner</span>
+              <span id="playerOneBadge" class="result-badge is-hidden">Winner</span>
             </div>
             <div id="playerOneCards" class="cards" aria-label="first hand hole cards"></div>
             <p id="playerOneHand" class="hand-name"></p>
@@ -108,6 +108,18 @@
         <ol id="historyList" class="history-list"></ol>
       </section>
     </main>
+
+    <div id="modeDialog" class="dialog-backdrop is-hidden" role="dialog" aria-modal="true" aria-labelledby="modeDialogTitle">
+      <section class="dialog-panel">
+        <p class="panel-label">Mode Change</p>
+        <h2 id="modeDialogTitle">モードを切り替えますか？</h2>
+        <p id="modeDialogText">現在のハンドはリセットされます。</p>
+        <div class="dialog-actions">
+          <button id="modeCancelButton" class="ghost-button" type="button">Cancel</button>
+          <button id="modeConfirmButton" class="dialog-primary-button" type="button">Switch</button>
+        </div>
+      </section>
+    </div>
 
     <script type="module" src="./src/app.js"></script>
   </body>

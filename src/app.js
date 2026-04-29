@@ -76,6 +76,11 @@ const elements = {
   winnerSummary: document.querySelector("#winnerSummary"),
   winnerSubtext: document.querySelector("#winnerSubtext"),
   winnerPanel: document.querySelector(".winner-panel"),
+  modeDialog: document.querySelector("#modeDialog"),
+  modeDialogTitle: document.querySelector("#modeDialogTitle"),
+  modeDialogText: document.querySelector("#modeDialogText"),
+  modeCancelButton: document.querySelector("#modeCancelButton"),
+  modeConfirmButton: document.querySelector("#modeConfirmButton"),
 };
 
 function createDeck() {
@@ -342,8 +347,28 @@ function setWinnerUi(winner) {
 
   elements.playerOnePanel.classList.toggle("is-winner", p1Won);
   elements.playerTwoPanel.classList.toggle("is-winner", p2Won);
+  elements.playerOnePanel.classList.remove("is-leading");
+  elements.playerTwoPanel.classList.remove("is-leading");
   elements.playerOneBadge.classList.toggle("is-hidden", !p1Won);
   elements.playerTwoBadge.classList.toggle("is-hidden", !p2Won);
+}
+
+function clearWinnerUi() {
+  elements.playerOnePanel.classList.remove("is-winner");
+  elements.playerTwoPanel.classList.remove("is-winner");
+  elements.playerOneBadge.classList.add("is-hidden");
+  elements.playerTwoBadge.classList.add("is-hidden");
+}
+
+function setLeaderUi(equity) {
+  if (!equity || state.revealedBoardCount === 5) return;
+
+  const margin = Math.abs(equity.player1 - equity.player2);
+  const playerOneLeads = equity.player1 > equity.player2 && margin >= 0.01;
+  const playerTwoLeads = equity.player2 > equity.player1 && margin >= 0.01;
+
+  elements.playerOnePanel.classList.toggle("is-leading", playerOneLeads);
+  elements.playerTwoPanel.classList.toggle("is-leading", playerTwoLeads);
 }
 
 function loadStoredSession() {
@@ -468,6 +493,8 @@ function renderCurrentFlip() {
   if (equity) {
     elements.playerOneEquity.textContent = `${equityPrefix} ${percent(equity.player1)}`;
     elements.playerTwoEquity.textContent = `${equityPrefix} ${percent(equity.player2)}`;
+    clearWinnerUi();
+    setLeaderUi(equity);
   }
   renderStreetMeter(state.revealedBoardCount);
 
@@ -477,7 +504,6 @@ function renderCurrentFlip() {
     elements.winnerSummary.textContent = "-";
     elements.winnerSubtext.textContent = "";
     elements.winnerPanel.classList.remove("is-final");
-    setWinnerUi(null);
     return;
   }
 
@@ -497,7 +523,9 @@ function finishFlip(flip, score1, score2, playerOneName, playerTwoName) {
 
   state.history.unshift({
     title: resultTitle,
-    detail: `${cardText(flip.player1)} vs ${cardText(flip.player2)} / ${cardText(flip.board)}`,
+    player1: flip.player1,
+    player2: flip.player2,
+    board: flip.board,
   });
   state.history = state.history.slice(0, 6);
 
@@ -545,10 +573,50 @@ function renderHistory() {
   const items = state.history.map((item) => {
     const listItem = document.createElement("li");
     listItem.className = "history-item";
-    listItem.innerHTML = `<strong>${item.title}</strong><span>${item.detail}</span>`;
+    const title = document.createElement("strong");
+    title.textContent = item.title;
+
+    if (!item.player1 || !item.player2 || !item.board) {
+      const detail = document.createElement("span");
+      detail.textContent = item.detail || "";
+      listItem.replaceChildren(title, detail);
+      return listItem;
+    }
+
+    const hands = document.createElement("div");
+    hands.className = "history-cards";
+    hands.append(
+      renderMiniCardGroup(item.player1),
+      renderHistoryDivider("vs"),
+      renderMiniCardGroup(item.player2),
+      renderHistoryDivider("/"),
+      renderMiniCardGroup(item.board),
+    );
+    listItem.replaceChildren(title, hands);
     return listItem;
   });
   elements.historyList.replaceChildren(...items);
+}
+
+function renderMiniCardGroup(cards) {
+  const group = document.createElement("span");
+  group.className = "mini-card-group";
+  group.replaceChildren(...cards.map(renderMiniCard));
+  return group;
+}
+
+function renderMiniCard(card) {
+  const miniCard = document.createElement("span");
+  miniCard.className = `mini-card suit-${card.suit}`;
+  miniCard.textContent = `${rankLabels[card.rank] || card.rank}${suitSymbols[card.suit]}`;
+  return miniCard;
+}
+
+function renderHistoryDivider(text) {
+  const divider = document.createElement("span");
+  divider.className = "history-divider";
+  divider.textContent = text;
+  return divider;
 }
 
 function setMode(mode) {
@@ -556,6 +624,28 @@ function setMode(mode) {
   elements.soloModeButton.classList.toggle("is-active", mode === "solo");
   elements.duoModeButton.classList.toggle("is-active", mode === "duo");
   startFlip();
+}
+
+function requestModeChange(mode) {
+  if (mode === state.mode || state.isOpeningBoard) return;
+
+  const label = mode === "solo" ? "1人" : "2人";
+  state.pendingMode = mode;
+  elements.modeDialogTitle.textContent = `${label}モードに切り替えますか？`;
+  elements.modeDialogText.textContent = "現在のハンドはリセットされます。";
+  elements.modeDialog.classList.remove("is-hidden");
+}
+
+function closeModeDialog() {
+  state.pendingMode = null;
+  elements.modeDialog.classList.add("is-hidden");
+}
+
+function confirmModeChange() {
+  if (state.pendingMode) {
+    setMode(state.pendingMode);
+  }
+  closeModeDialog();
 }
 
 function resetSession() {
@@ -574,8 +664,10 @@ function resetSession() {
 
 elements.dealButton.addEventListener("click", handleBoardAction);
 elements.resetButton.addEventListener("click", resetSession);
-elements.soloModeButton.addEventListener("click", () => setMode("solo"));
-elements.duoModeButton.addEventListener("click", () => setMode("duo"));
+elements.soloModeButton.addEventListener("click", () => requestModeChange("solo"));
+elements.duoModeButton.addEventListener("click", () => requestModeChange("duo"));
+elements.modeCancelButton.addEventListener("click", closeModeDialog);
+elements.modeConfirmButton.addEventListener("click", confirmModeChange);
 
 loadStoredSession();
 renderStats();
