@@ -399,7 +399,6 @@ function openBoardAutomatically() {
   state.isOpeningBoard = true;
   renderActionButton();
   revealNextBoardCard();
-  state.revealTimer = window.setInterval(revealNextBoardCard, 760);
 }
 
 function revealNextBoardCard() {
@@ -415,15 +414,25 @@ function revealNextBoardCard() {
   if (state.revealedBoardCount === 5) {
     stopBoardOpening();
     renderActionButton();
+    return;
   }
+
+  state.revealTimer = window.setTimeout(revealNextBoardCard, getRevealDelay(state.revealedBoardCount));
 }
 
 function stopBoardOpening() {
   if (state.revealTimer) {
-    window.clearInterval(state.revealTimer);
+    window.clearTimeout(state.revealTimer);
   }
   state.revealTimer = null;
   state.isOpeningBoard = false;
+}
+
+function getRevealDelay(revealedCount) {
+  if (revealedCount < 3) return 260;
+  if (revealedCount === 3) return 1300;
+  if (revealedCount === 4) return 1500;
+  return 760;
 }
 
 function renderActionButton() {
@@ -438,11 +447,13 @@ function renderCurrentFlip() {
   const visibleBoard = flip.board.slice(0, state.revealedBoardCount);
   const score1 = evaluateBest([...flip.player1, ...visibleBoard]);
   const score2 = evaluateBest([...flip.player2, ...visibleBoard]);
-  const equity = calculateEquity(flip.player1, flip.player2, visibleBoard);
+  const shouldCalculateEquity =
+    state.revealedBoardCount === 0 || state.revealedBoardCount === 3 || state.revealedBoardCount >= 4;
+  const equity = shouldCalculateEquity ? calculateEquity(flip.player1, flip.player2, visibleBoard) : null;
   const playerOneName = state.mode === "solo" ? "You" : "Player 1";
   const playerTwoName = state.mode === "solo" ? "CPU" : "Player 2";
   const streetName = getStreetName(state.revealedBoardCount);
-  const equityPrefix = equity.isEstimate ? "推定勝率" : "勝率";
+  const equityPrefix = equity?.isEstimate ? "推定勝率" : "勝率";
 
   elements.playerOneName.textContent = playerOneName;
   elements.playerTwoName.textContent = playerTwoName;
@@ -454,16 +465,22 @@ function renderCurrentFlip() {
   renderBoard(flip.board, state.revealedBoardCount);
   elements.playerOneHand.textContent = describeScore(score1);
   elements.playerTwoHand.textContent = describeScore(score2);
-  elements.playerOneEquity.textContent = `${equityPrefix}: ${percent(equity.player1)}`;
-  elements.playerTwoEquity.textContent = `${equityPrefix}: ${percent(equity.player2)}`;
+  if (equity) {
+    elements.playerOneEquity.textContent = `${equityPrefix}: ${percent(equity.player1)}`;
+    elements.playerTwoEquity.textContent = `${equityPrefix}: ${percent(equity.player2)}`;
+  }
   renderStreetMeter(state.revealedBoardCount);
 
   if (state.revealedBoardCount < 5) {
-    elements.resultTitle.textContent = `${streetName}: ${playerOneName} ${percent(equity.player1)} / ${playerTwoName} ${percent(equity.player2)}`;
+    elements.resultTitle.textContent = equity
+      ? `${streetName}: ${playerOneName} ${percent(equity.player1)} / ${playerTwoName} ${percent(equity.player2)}`
+      : `${streetName}: フロップ公開中`;
     elements.resultDetail.textContent =
-      equity.chops > 0
+      equity?.chops > 0
         ? `Chop chance ${percent(equity.chops)}`
-        : "カードを1枚ずつ公開して勝率と現在の役を更新します。";
+        : state.revealedBoardCount > 0 && state.revealedBoardCount < 3
+          ? "フロップ3枚が開いたら勝率を更新します。"
+          : "カードを1枚ずつ公開して勝率と現在の役を更新します。";
     elements.winnerSummary.textContent = "カードを公開してください";
     elements.winnerSubtext.textContent = `${streetName} 時点の勝率を表示中`;
     elements.winnerPanel.classList.remove("is-final");
