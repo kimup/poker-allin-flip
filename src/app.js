@@ -228,9 +228,10 @@ function calculateEquity(player1, player2, visibleBoard) {
   const missingBoardCount = 5 - visibleBoard.length;
   const knownCards = [...player1, ...player2, ...visibleBoard];
   const remainingDeck = getRemainingDeck(knownCards);
-  const useSampling = missingBoardCount >= 5;
+  const useSampling = missingBoardCount >= 3;
+  const sampleSize = visibleBoard.length === 0 ? 5000 : 1800;
   const completions = useSampling
-    ? Array.from({ length: 6000 }, () => shuffle(remainingDeck).slice(0, missingBoardCount))
+    ? Array.from({ length: sampleSize }, () => shuffle(remainingDeck).slice(0, missingBoardCount))
     : combinations(remainingDeck, missingBoardCount);
   const totals = {
     player1: 0,
