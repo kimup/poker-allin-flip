@@ -65,6 +65,25 @@ button {
   gap: 12px;
 }
 
+.delay-control {
+  display: grid;
+  gap: 3px;
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.delay-control select {
+  min-height: 34px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text);
+  font: inherit;
+  text-transform: none;
+}
+
 .eyebrow,
 .panel-label,
 .stat-label {

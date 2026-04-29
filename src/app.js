@@ -32,6 +32,7 @@ const state = {
   revealedBoardCount: 0,
   isOpeningBoard: false,
   revealTimer: null,
+  streetDelayMs: 2000,
   stats: {
     player1: 0,
     player2: 0,
@@ -45,6 +46,7 @@ const elements = {
   soloModeButton: document.querySelector("#soloModeButton"),
   duoModeButton: document.querySelector("#duoModeButton"),
   dealButton: document.querySelector("#dealButton"),
+  streetDelaySelect: document.querySelector("#streetDelaySelect"),
   resetButton: document.querySelector("#resetButton"),
   playerOneName: document.querySelector("#playerOneName"),
   playerTwoName: document.querySelector("#playerTwoName"),
@@ -469,9 +471,7 @@ function stopBoardOpening() {
 
 function getRevealDelay(revealedCount) {
   if (revealedCount < 3) return 260;
-  if (revealedCount === 3) return 1300;
-  if (revealedCount === 4) return 1500;
-  return 760;
+  return state.streetDelayMs;
 }
 
 function renderActionButton() {
@@ -677,6 +677,9 @@ function resetSession() {
 }
 
 elements.dealButton.addEventListener("click", handleBoardAction);
+elements.streetDelaySelect.addEventListener("change", () => {
+  state.streetDelayMs = Number(elements.streetDelaySelect.value) || 2000;
+});
 elements.resetButton.addEventListener("click", resetSession);
 elements.soloModeButton.addEventListener("click", () => requestModeChange("solo"));
 elements.duoModeButton.addEventListener("click", () => requestModeChange("duo"));
