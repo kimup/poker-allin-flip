@@ -9,7 +9,10 @@
   --text: #f5f1e8;
   --muted: #aeb8b3;
   --accent: #f1c453;
-  --red: #e45d5d;
+  --spade: #2f3438;
+  --heart: #d94343;
+  --diamond: #2778d9;
+  --club: #229b5a;
   --black: #202326;
   --green: #42d19d;
 }
@@ -200,8 +203,20 @@ h2 {
   box-shadow: 0 10px 18px rgba(0, 0, 0, 0.24);
 }
 
-.card.is-red {
-  color: var(--red);
+.card.suit-s {
+  color: var(--spade);
+}
+
+.card.suit-h {
+  color: var(--heart);
+}
+
+.card.suit-d {
+  color: var(--diamond);
+}
+
+.card.suit-c {
+  color: var(--club);
 }
 
 .card-rank {
@@ -329,7 +344,7 @@ h2 {
 .winner-panel {
   display: grid;
   gap: 8px;
-  margin-bottom: 18px;
+  margin: 18px 0;
   padding: 18px;
   background: rgba(16, 20, 22, 0.9);
 }

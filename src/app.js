@@ -261,7 +261,7 @@ function calculateEquity(player1, player2, visibleBoard) {
 
 function renderCard(card) {
   const cardElement = document.createElement("div");
-  cardElement.className = `card ${card.suit === "h" || card.suit === "d" ? "is-red" : ""}`;
+  cardElement.className = `card suit-${card.suit}`;
   const rank = rankLabels[card.rank] || card.rank;
   const suit = suitSymbols[card.suit];
   cardElement.setAttribute("aria-label", `${rank} of ${card.suit}`);
