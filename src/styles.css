@@ -96,20 +96,32 @@ button {
   text-transform: none;
 }
 
-.hand-targets {
-  display: flex;
-  gap: 6px;
-}
-
-.hand-settings:not(.is-specified) .hand-targets,
 .hand-settings:not(.is-specified) .selected-hands,
 .hand-settings:not(.is-specified) .hand-input-message {
   display: none;
 }
 
-.target-button {
+.selected-hands {
+  display: grid;
+  gap: 6px;
+  color: var(--text);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.hand-slot-row {
+  display: grid;
+  grid-template-columns: 62px repeat(2, 42px);
+  gap: 6px;
+  align-items: center;
+}
+
+.hand-slot-label {
+  color: var(--muted);
+}
+
+.hand-slot {
   min-height: 36px;
-  padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.08);
@@ -117,16 +129,10 @@ button {
   font-weight: 900;
 }
 
-.target-button.is-active {
-  border-color: rgba(241, 196, 83, 0.8);
-  background: rgba(241, 196, 83, 0.16);
-  color: var(--accent);
-}
-
-.selected-hands {
-  color: var(--text);
-  font-size: 0.88rem;
-  font-weight: 800;
+.hand-slot.is-active {
+  border-color: rgba(241, 196, 83, 0.9);
+  background: rgba(241, 196, 83, 0.18);
+  box-shadow: 0 0 0 2px rgba(241, 196, 83, 0.16);
 }
 
 .hand-input-message {
@@ -165,6 +171,16 @@ button {
 .picker-card.is-selected {
   outline: 3px solid var(--accent);
   outline-offset: 1px;
+}
+
+.picker-card.is-unavailable,
+.picker-card:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.picker-card.is-selected {
+  opacity: 1;
 }
 
 .hand-banner {
@@ -410,6 +426,22 @@ h2 {
 }
 
 .picker-card.suit-c {
+  color: var(--club);
+}
+
+.hand-slot.suit-s {
+  color: var(--spade);
+}
+
+.hand-slot.suit-h {
+  color: var(--heart);
+}
+
+.hand-slot.suit-d {
+  color: var(--diamond);
+}
+
+.hand-slot.suit-c {
   color: var(--club);
 }
 
