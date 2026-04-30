@@ -164,6 +164,10 @@ function cardKey(card) {
   return `${card.rank}${card.suit}`;
 }
 
+function isCard(card) {
+  return Boolean(card && ranks.includes(card.rank) && suits.includes(card.suit));
+}
+
 function getRemainingDeck(knownCards) {
   const known = new Set(knownCards.map(cardKey));
   return createDeck().filter((card) => !known.has(cardKey(card)));
@@ -494,10 +498,27 @@ function loadStoredSession() {
       chops: Number(stored.stats?.chops) || 0,
       total: Number(stored.stats?.total) || 0,
     };
-    state.history = Array.isArray(stored.history) ? stored.history.slice(0, 6) : [];
+    state.history = Array.isArray(stored.history)
+      ? stored.history.filter(isValidHistoryItem).slice(0, 6)
+      : [];
+    saveStoredSession();
   } catch {
     localStorage.removeItem(storageKey);
   }
+}
+
+function isValidHistoryItem(item) {
+  return (
+    item &&
+    typeof item.title === "string" &&
+    Array.isArray(item.player1) &&
+    Array.isArray(item.player2) &&
+    Array.isArray(item.board) &&
+    item.player1.length === 2 &&
+    item.player2.length === 2 &&
+    item.board.length === 5 &&
+    [...item.player1, ...item.player2, ...item.board].every(isCard)
+  );
 }
 
 function saveStoredSession() {
@@ -714,18 +735,11 @@ function renderHistory() {
     return;
   }
 
-  const items = state.history.map((item) => {
+  const items = state.history.filter(isValidHistoryItem).map((item) => {
     const listItem = document.createElement("li");
     listItem.className = "history-item";
     const title = document.createElement("strong");
     title.textContent = item.title;
-
-    if (!item.player1 || !item.player2 || !item.board) {
-      const detail = document.createElement("span");
-      detail.textContent = item.detail || "";
-      listItem.replaceChildren(title, detail);
-      return listItem;
-    }
 
     const hands = document.createElement("div");
     hands.className = "history-cards";
@@ -745,7 +759,7 @@ function renderHistory() {
 function renderMiniCardGroup(cards) {
   const group = document.createElement("span");
   group.className = "mini-card-group";
-  group.replaceChildren(...cards.map(renderMiniCard));
+  group.replaceChildren(...cards.filter(isCard).map(renderMiniCard));
   return group;
 }
 
