@@ -353,6 +353,15 @@ function renderHoleCards(container, cards, target) {
   containerReplace(container, slots);
 }
 
+function renderPlayerCards(container, cards, target) {
+  if (state.handMode === "specified") {
+    renderHoleCards(container, cards, target);
+    return;
+  }
+
+  renderCards(container, cards);
+}
+
 function renderSpecifiedHoleSlot(card, target, index) {
   const slot = document.createElement("button");
   const isActive = state.activeHandSlot.target === target && state.activeHandSlot.index === index;
@@ -600,8 +609,8 @@ function renderCurrentFlip() {
   elements.playerOneStatLabel.textContent = playerOneName;
   elements.playerTwoStatLabel.textContent = playerTwoName;
   renderActionButton();
-  renderHoleCards(elements.playerOneCards, flip.player1, "player1");
-  renderHoleCards(elements.playerTwoCards, flip.player2, "player2");
+  renderPlayerCards(elements.playerOneCards, flip.player1, "player1");
+  renderPlayerCards(elements.playerTwoCards, flip.player2, "player2");
   renderBoard(flip.board, state.revealedBoardCount);
   elements.playerOneHand.textContent = describeScore(score1);
   elements.playerTwoHand.textContent = describeScore(score2);
@@ -823,6 +832,12 @@ function resetSpecifiedHands() {
   renderCardPicker();
 }
 
+function initializeControls() {
+  state.handMode = "random";
+  elements.handModeSelect.value = state.handMode;
+  elements.streetDelaySelect.value = String(state.streetDelayMs);
+}
+
 function setMode(mode) {
   state.mode = mode;
   elements.soloModeButton.classList.toggle("is-active", mode === "solo");
@@ -908,6 +923,7 @@ elements.modeCancelButton.addEventListener("click", closeModeDialog);
 elements.modeConfirmButton.addEventListener("click", confirmModeChange);
 
 loadStoredSession();
+initializeControls();
 renderCardPicker();
 renderStats();
 renderHistory();
