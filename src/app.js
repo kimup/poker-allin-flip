@@ -60,7 +60,6 @@ const elements = {
   streetDelaySelect: document.querySelector("#streetDelaySelect"),
   handSettings: document.querySelector("#handSettings"),
   handModeSelect: document.querySelector("#handModeSelect"),
-  selectedHands: document.querySelector("#selectedHands"),
   cardPicker: document.querySelector("#cardPicker"),
   handInputMessage: document.querySelector("#handInputMessage"),
   handBanner: document.querySelector("#handBanner"),
@@ -117,11 +116,22 @@ function shuffle(cards) {
 
 function dealFlip() {
   const specified = getSpecifiedHands();
-  const knownCards = [...specified.player1, ...specified.player2];
+  const knownCards =
+    state.handMode === "specified"
+      ? [...state.selectedHands.player1, ...state.selectedHands.player2].filter(Boolean)
+      : [...specified.player1, ...specified.player2];
   const deck = shuffle(getRemainingDeck(knownCards));
+  if (state.handMode === "specified") {
+    return {
+      player1: [state.selectedHands.player1[0] || null, state.selectedHands.player1[1] || null],
+      player2: [state.selectedHands.player2[0] || null, state.selectedHands.player2[1] || null],
+      board: deck.slice(0, 5),
+    };
+  }
+
   return {
-    player1: specified.player1.length === 2 ? specified.player1 : deck.splice(0, 2),
-    player2: specified.player2.length === 2 ? specified.player2 : deck.splice(0, 2),
+    player1: deck.splice(0, 2),
+    player2: deck.splice(0, 2),
     board: deck.slice(0, 5),
   };
 }
@@ -134,8 +144,7 @@ function getSpecifiedHands() {
 
   const player1 = isCompleteHand(state.selectedHands.player1) ? state.selectedHands.player1 : [];
   const player2 = isCompleteHand(state.selectedHands.player2) ? state.selectedHands.player2 : [];
-  elements.handInputMessage.textContent =
-    player1.length || player2.length ? "2枚揃ったハンドだけ指定として使用中" : "";
+  elements.handInputMessage.textContent = isSpecifiedHandReady() ? "" : "伏せカードを選択してください";
   return {
     player1: [...player1],
     player2: [...player2],
@@ -144,6 +153,10 @@ function getSpecifiedHands() {
 
 function isCompleteHand(cards) {
   return cards.length === 2 && cards.every(Boolean);
+}
+
+function isSpecifiedHandReady() {
+  return isCompleteHand(state.selectedHands.player1) && isCompleteHand(state.selectedHands.player2);
 }
 
 function cardKey(card) {
@@ -330,6 +343,39 @@ function renderCards(container, cards) {
   container.replaceChildren(...cards.map(renderCard));
 }
 
+function renderHoleCards(container, cards, target) {
+  if (state.handMode !== "specified") {
+    renderCards(container, cards);
+    return;
+  }
+
+  const slots = [0, 1].map((index) => renderSpecifiedHoleSlot(cards[index], target, index));
+  containerReplace(container, slots);
+}
+
+function renderSpecifiedHoleSlot(card, target, index) {
+  const slot = document.createElement("button");
+  const isActive = state.activeHandSlot.target === target && state.activeHandSlot.index === index;
+
+  slot.type = "button";
+  slot.className = card ? `card card-button suit-${card.suit}` : "card card-button is-hidden-card is-hole-placeholder";
+  slot.classList.toggle("is-active-slot", isActive);
+  slot.setAttribute("aria-label", `${target === "player1" ? "Hero" : "Villain"} card ${index + 1}`);
+
+  if (card) {
+    const rank = rankLabels[card.rank] || card.rank;
+    const suit = suitSymbols[card.suit];
+    slot.innerHTML = `
+      <span class="card-rank">${rank}</span>
+      <span class="card-suit">${suit}</span>
+      <span class="card-corner">${suit}</span>
+    `;
+  }
+
+  slot.addEventListener("click", () => clearAndSelectHandSlot(target, index));
+  return slot;
+}
+
 function renderBoard(cards, revealedCount) {
   const visibleCards = cards.slice(0, revealedCount).map(renderCard);
   const hiddenCards = Array.from({ length: 5 - revealedCount }, (_, index) =>
@@ -378,6 +424,7 @@ function getStreetName(revealedCount) {
 
 function getActionText() {
   if (state.isOpeningBoard) return "Opening...";
+  if (state.handMode === "specified" && !isSpecifiedHandReady()) return "Select Hands";
   if (state.revealedBoardCount === 5) return "Next Hand";
   return "Board Open";
 }
@@ -478,6 +525,7 @@ function showHandBanner() {
 
 function handleBoardAction() {
   if (state.isOpeningBoard) return;
+  if (state.handMode === "specified" && !isSpecifiedHandReady()) return;
 
   if (!state.currentFlip || state.revealedBoardCount === 5) {
     startFlip({ showBanner: true });
@@ -527,18 +575,20 @@ function getRevealDelay(revealedCount) {
 
 function renderActionButton() {
   elements.dealButton.textContent = getActionText();
-  elements.dealButton.disabled = state.isOpeningBoard;
+  elements.dealButton.disabled = state.isOpeningBoard || (state.handMode === "specified" && !isSpecifiedHandReady());
   elements.dealButton.classList.toggle("is-opening", state.isOpeningBoard);
   elements.dealButton.classList.toggle("is-next", !state.isOpeningBoard && state.revealedBoardCount === 5);
 }
 
 function renderCurrentFlip() {
   const flip = state.currentFlip;
+  const hasCompleteHands = isCompleteHand(flip.player1) && isCompleteHand(flip.player2);
   const visibleBoard = flip.board.slice(0, state.revealedBoardCount);
-  const score1 = evaluateBest([...flip.player1, ...visibleBoard]);
-  const score2 = evaluateBest([...flip.player2, ...visibleBoard]);
+  const score1 = hasCompleteHands ? evaluateBest([...flip.player1, ...visibleBoard]) : null;
+  const score2 = hasCompleteHands ? evaluateBest([...flip.player2, ...visibleBoard]) : null;
   const shouldCalculateEquity =
-    state.revealedBoardCount === 0 || state.revealedBoardCount === 3 || state.revealedBoardCount >= 4;
+    hasCompleteHands &&
+    (state.revealedBoardCount === 0 || state.revealedBoardCount === 3 || state.revealedBoardCount >= 4);
   const equity = shouldCalculateEquity ? calculateEquity(flip.player1, flip.player2, visibleBoard) : null;
   const playerOneName = state.mode === "solo" ? "Hero" : "Seat 1";
   const playerTwoName = state.mode === "solo" ? "Villain" : "Seat 2";
@@ -550,8 +600,8 @@ function renderCurrentFlip() {
   elements.playerOneStatLabel.textContent = playerOneName;
   elements.playerTwoStatLabel.textContent = playerTwoName;
   renderActionButton();
-  renderCards(elements.playerOneCards, flip.player1);
-  renderCards(elements.playerTwoCards, flip.player2);
+  renderHoleCards(elements.playerOneCards, flip.player1, "player1");
+  renderHoleCards(elements.playerTwoCards, flip.player2, "player2");
   renderBoard(flip.board, state.revealedBoardCount);
   elements.playerOneHand.textContent = describeScore(score1);
   elements.playerTwoHand.textContent = describeScore(score2);
@@ -560,6 +610,10 @@ function renderCurrentFlip() {
     elements.playerTwoEquity.textContent = `${equityPrefix} ${percent(equity.player2)}`;
     clearWinnerUi();
     setLeaderUi(equity);
+  } else {
+    elements.playerOneEquity.textContent = "";
+    elements.playerTwoEquity.textContent = "";
+    clearWinnerUi();
   }
   renderStreetMeter(state.revealedBoardCount);
 
@@ -690,61 +744,24 @@ function renderCardPicker() {
   elements.cardPicker.classList.toggle("is-hidden", !specified);
 
   if (!specified) {
-    elements.selectedHands.replaceChildren();
     elements.cardPicker.replaceChildren();
     return;
   }
 
-  renderSelectedHandSlots();
   const selectedKeys = new Set([...state.selectedHands.player1, ...state.selectedHands.player2].filter(Boolean).map(cardKey));
   const pickerCards = createDeck().map((card) => {
     const button = document.createElement("button");
     const key = cardKey(card);
-    const currentCard = state.selectedHands[state.activeHandSlot.target][state.activeHandSlot.index];
-    const isCurrentSlotCard = currentCard && cardKey(currentCard) === key;
-    const unavailable = selectedKeys.has(key) && !isCurrentSlotCard;
+    const unavailable = selectedKeys.has(key);
     button.type = "button";
     button.className = `picker-card suit-${card.suit}`;
     button.textContent = `${rankLabels[card.rank] || card.rank}${suitSymbols[card.suit]}`;
     button.disabled = unavailable;
-    button.classList.toggle("is-selected", isCurrentSlotCard);
-    button.classList.toggle("is-unavailable", unavailable && !isCurrentSlotCard);
+    button.classList.toggle("is-unavailable", unavailable);
     button.addEventListener("click", () => toggleSpecifiedCard(card));
     return button;
   });
   elements.cardPicker.replaceChildren(...pickerCards);
-}
-
-function renderSelectedHandSlots() {
-  const rows = [
-    renderHandSlotRow("Hero", "player1"),
-    renderHandSlotRow("Villain", "player2"),
-  ];
-  elements.selectedHands.replaceChildren(...rows);
-}
-
-function renderHandSlotRow(label, target) {
-  const row = document.createElement("div");
-  row.className = "hand-slot-row";
-  const name = document.createElement("span");
-  name.className = "hand-slot-label";
-  name.textContent = label;
-  row.append(name, renderHandSlot(target, 0), renderHandSlot(target, 1));
-  return row;
-}
-
-function renderHandSlot(target, index) {
-  const card = state.selectedHands[target][index];
-  const slot = document.createElement("button");
-  slot.type = "button";
-  slot.className = `hand-slot ${card ? `suit-${card.suit}` : ""}`;
-  slot.textContent = card ? `${rankLabels[card.rank] || card.rank}${suitSymbols[card.suit]}` : "-";
-  slot.classList.toggle(
-    "is-active",
-    state.activeHandSlot.target === target && state.activeHandSlot.index === index,
-  );
-  slot.addEventListener("click", () => setHandSlot(target, index));
-  return slot;
 }
 
 function toggleSpecifiedCard(card) {
@@ -774,12 +791,30 @@ function advanceHandSlot(target, index) {
 function setHandSlot(target, index) {
   state.activeHandSlot = { target, index };
   renderCardPicker();
+  if (state.currentFlip) {
+    renderCurrentFlip();
+  }
+}
+
+function clearAndSelectHandSlot(target, index) {
+  if (state.handMode !== "specified") return;
+
+  const hadCard = Boolean(state.selectedHands[target][index]);
+  state.activeHandSlot = { target, index };
+  if (hadCard) {
+    state.selectedHands[target][index] = null;
+    renderCardPicker();
+    startFlip();
+    return;
+  }
+
+  setHandSlot(target, index);
 }
 
 function resetSpecifiedHands() {
   state.selectedHands = {
-    player1: [],
-    player2: [],
+    player1: [null, null],
+    player2: [null, null],
   };
   state.activeHandSlot = {
     target: "player1",
