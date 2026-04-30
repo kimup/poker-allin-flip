@@ -71,8 +71,6 @@ const elements = {
   playerTwoName: document.querySelector("#playerTwoName"),
   playerOnePanel: document.querySelector("#playerOnePanel"),
   playerTwoPanel: document.querySelector("#playerTwoPanel"),
-  playerOneBadge: document.querySelector("#playerOneBadge"),
-  playerTwoBadge: document.querySelector("#playerTwoBadge"),
   playerOneCards: document.querySelector("#playerOneCards"),
   playerTwoCards: document.querySelector("#playerTwoCards"),
   playerOneEquity: document.querySelector("#playerOneEquity"),
@@ -446,7 +444,7 @@ function getActionText() {
     return { kicker: "Hand Setup", label: "Select Hands" };
   }
   if (state.revealedBoardCount === 5) {
-    return { kicker: "Start Over", label: "Next Hand" };
+    return { kicker: "New Deal", label: "Next Hand" };
   }
   return { kicker: "Reveal Board", label: "Board Open" };
 }
@@ -461,10 +459,6 @@ function setWinnerUi(winner) {
   elements.playerTwoPanel.classList.remove("is-leading");
   elements.playerOnePanel.classList.remove("is-locked");
   elements.playerTwoPanel.classList.remove("is-locked");
-  elements.playerOneBadge.textContent = "Winner";
-  elements.playerTwoBadge.textContent = "Winner";
-  elements.playerOneBadge.classList.toggle("is-hidden", !p1Won);
-  elements.playerTwoBadge.classList.toggle("is-hidden", !p2Won);
 }
 
 function clearWinnerUi() {
@@ -474,8 +468,6 @@ function clearWinnerUi() {
   elements.playerTwoPanel.classList.remove("is-locked");
   elements.playerOneEquity.classList.remove("is-final-win", "is-final-lose", "is-final-chop");
   elements.playerTwoEquity.classList.remove("is-final-win", "is-final-lose", "is-final-chop");
-  elements.playerOneBadge.classList.add("is-hidden");
-  elements.playerTwoBadge.classList.add("is-hidden");
 }
 
 function setLeaderUi(equity) {
@@ -491,10 +483,6 @@ function setLeaderUi(equity) {
   elements.playerTwoPanel.classList.toggle("is-locked", playerTwoLocked);
   elements.playerOnePanel.classList.toggle("is-leading", playerOneLeads && !playerOneLocked);
   elements.playerTwoPanel.classList.toggle("is-leading", playerTwoLeads && !playerTwoLocked);
-  elements.playerOneBadge.textContent = playerOneLocked ? "Locked" : "Winner";
-  elements.playerTwoBadge.textContent = playerTwoLocked ? "Locked" : "Winner";
-  elements.playerOneBadge.classList.toggle("is-hidden", !playerOneLocked);
-  elements.playerTwoBadge.classList.toggle("is-hidden", !playerTwoLocked);
 }
 
 function loadStoredSession() {
