@@ -60,7 +60,6 @@ const elements = {
   streetDelaySelect: document.querySelector("#streetDelaySelect"),
   handSettings: document.querySelector("#handSettings"),
   handModeSelect: document.querySelector("#handModeSelect"),
-  selectedHands: document.querySelector("#selectedHands"),
   cardPicker: document.querySelector("#cardPicker"),
   handInputMessage: document.querySelector("#handInputMessage"),
   handBanner: document.querySelector("#handBanner"),
@@ -116,13 +115,22 @@ function shuffle(cards) {
 }
 
 function dealFlip() {
-  const specified = getSpecifiedHands();
-  const knownCards = [...specified.player1, ...specified.player2];
-  const deck = shuffle(getRemainingDeck(knownCards));
+  if (state.handMode === "specified") {
+    const player1 = state.selectedHands.player1.filter(Boolean);
+    const player2 = state.selectedHands.player2.filter(Boolean);
+    const deck = shuffle(getRemainingDeck([...player1, ...player2]));
+    return {
+      player1,
+      player2,
+      board: deck.slice(0, 5),
+    };
+  }
+
+  const deck = shuffle(createDeck());
   return {
-    player1: specified.player1.length === 2 ? specified.player1 : deck.splice(0, 2),
-    player2: specified.player2.length === 2 ? specified.player2 : deck.splice(0, 2),
-    board: deck.slice(0, 5),
+    player1: deck.slice(0, 2),
+    player2: deck.slice(2, 4),
+    board: deck.slice(4, 9),
   };
 }
 
@@ -319,6 +327,21 @@ function renderCard(card) {
   return cardElement;
 }
 
+function renderCardButton(card) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = `card suit-${card.suit}`;
+  const rank = rankLabels[card.rank] || card.rank;
+  const suit = suitSymbols[card.suit];
+  button.setAttribute("aria-label", `${rank} of ${card.suit}`);
+  button.innerHTML = `
+    <span class="card-rank">${rank}</span>
+    <span class="card-suit">${suit}</span>
+    <span class="card-corner">${suit}</span>
+  `;
+  return button;
+}
+
 function renderHiddenCard(index) {
   const cardElement = document.createElement("div");
   cardElement.className = "card is-hidden-card";
@@ -328,6 +351,36 @@ function renderHiddenCard(index) {
 
 function renderCards(container, cards) {
   container.replaceChildren(...cards.map(renderCard));
+}
+
+function renderHoleCards(container, cards, target) {
+  if (state.handMode !== "specified") {
+    renderCards(container, cards);
+    return;
+  }
+
+  const slots = [state.selectedHands[target][0] || null, state.selectedHands[target][1] || null];
+  const slotElements = slots.map((card, index) => renderSpecifiedHoleSlot(card, target, index));
+  container.replaceChildren(...slotElements);
+}
+
+function renderSpecifiedHoleSlot(card, target, index) {
+  const slot = card ? renderCardButton(card) : renderEmptyHoleSlot();
+  slot.classList.add("is-selectable");
+  slot.classList.toggle(
+    "is-active-slot",
+    state.activeHandSlot.target === target && state.activeHandSlot.index === index,
+  );
+  slot.addEventListener("click", () => clearAndSelectHandSlot(target, index));
+  return slot;
+}
+
+function renderEmptyHoleSlot() {
+  const slot = document.createElement("button");
+  slot.type = "button";
+  slot.className = "card is-empty-slot";
+  slot.textContent = "Select";
+  return slot;
 }
 
 function renderBoard(cards, revealedCount) {
@@ -378,8 +431,14 @@ function getStreetName(revealedCount) {
 
 function getActionText() {
   if (state.isOpeningBoard) return "Opening...";
+  if (!canOpenBoard()) return "Select Hands";
   if (state.revealedBoardCount === 5) return "Next Hand";
   return "Board Open";
+}
+
+function canOpenBoard() {
+  if (state.handMode !== "specified") return true;
+  return isCompleteHand(state.selectedHands.player1) && isCompleteHand(state.selectedHands.player2);
 }
 
 function setWinnerUi(winner) {
@@ -478,6 +537,7 @@ function showHandBanner() {
 
 function handleBoardAction() {
   if (state.isOpeningBoard) return;
+  if (!canOpenBoard()) return;
 
   if (!state.currentFlip || state.revealedBoardCount === 5) {
     startFlip({ showBanner: true });
@@ -527,18 +587,20 @@ function getRevealDelay(revealedCount) {
 
 function renderActionButton() {
   elements.dealButton.textContent = getActionText();
-  elements.dealButton.disabled = state.isOpeningBoard;
+  elements.dealButton.disabled = state.isOpeningBoard || !canOpenBoard();
   elements.dealButton.classList.toggle("is-opening", state.isOpeningBoard);
   elements.dealButton.classList.toggle("is-next", !state.isOpeningBoard && state.revealedBoardCount === 5);
 }
 
 function renderCurrentFlip() {
   const flip = state.currentFlip;
+  const handsReady = state.handMode !== "specified" || canOpenBoard();
   const visibleBoard = flip.board.slice(0, state.revealedBoardCount);
-  const score1 = evaluateBest([...flip.player1, ...visibleBoard]);
-  const score2 = evaluateBest([...flip.player2, ...visibleBoard]);
+  const score1 = handsReady ? evaluateBest([...flip.player1, ...visibleBoard]) : null;
+  const score2 = handsReady ? evaluateBest([...flip.player2, ...visibleBoard]) : null;
   const shouldCalculateEquity =
-    state.revealedBoardCount === 0 || state.revealedBoardCount === 3 || state.revealedBoardCount >= 4;
+    handsReady &&
+    (state.revealedBoardCount === 0 || state.revealedBoardCount === 3 || state.revealedBoardCount >= 4);
   const equity = shouldCalculateEquity ? calculateEquity(flip.player1, flip.player2, visibleBoard) : null;
   const playerOneName = state.mode === "solo" ? "Hero" : "Seat 1";
   const playerTwoName = state.mode === "solo" ? "Villain" : "Seat 2";
@@ -550,11 +612,22 @@ function renderCurrentFlip() {
   elements.playerOneStatLabel.textContent = playerOneName;
   elements.playerTwoStatLabel.textContent = playerTwoName;
   renderActionButton();
-  renderCards(elements.playerOneCards, flip.player1);
-  renderCards(elements.playerTwoCards, flip.player2);
+  renderHoleCards(elements.playerOneCards, flip.player1, "player1");
+  renderHoleCards(elements.playerTwoCards, flip.player2, "player2");
   renderBoard(flip.board, state.revealedBoardCount);
   elements.playerOneHand.textContent = describeScore(score1);
   elements.playerTwoHand.textContent = describeScore(score2);
+  if (!handsReady) {
+    elements.playerOneEquity.textContent = "";
+    elements.playerTwoEquity.textContent = "";
+    clearWinnerUi();
+    renderStreetMeter(state.revealedBoardCount);
+    elements.resultTitle.textContent = "Preflop";
+    elements.winnerSummary.textContent = "-";
+    elements.winnerSubtext.textContent = "";
+    elements.winnerPanel.classList.remove("is-final");
+    return;
+  }
   if (equity) {
     elements.playerOneEquity.textContent = `${equityPrefix} ${percent(equity.player1)}`;
     elements.playerTwoEquity.textContent = `${equityPrefix} ${percent(equity.player2)}`;
@@ -690,19 +763,17 @@ function renderCardPicker() {
   elements.cardPicker.classList.toggle("is-hidden", !specified);
 
   if (!specified) {
-    elements.selectedHands.replaceChildren();
     elements.cardPicker.replaceChildren();
     return;
   }
 
-  renderSelectedHandSlots();
   const selectedKeys = new Set([...state.selectedHands.player1, ...state.selectedHands.player2].filter(Boolean).map(cardKey));
   const pickerCards = createDeck().map((card) => {
     const button = document.createElement("button");
     const key = cardKey(card);
     const currentCard = state.selectedHands[state.activeHandSlot.target][state.activeHandSlot.index];
     const isCurrentSlotCard = currentCard && cardKey(currentCard) === key;
-    const unavailable = selectedKeys.has(key) && !isCurrentSlotCard;
+    const unavailable = selectedKeys.has(key);
     button.type = "button";
     button.className = `picker-card suit-${card.suit}`;
     button.textContent = `${rankLabels[card.rank] || card.rank}${suitSymbols[card.suit]}`;
@@ -713,38 +784,6 @@ function renderCardPicker() {
     return button;
   });
   elements.cardPicker.replaceChildren(...pickerCards);
-}
-
-function renderSelectedHandSlots() {
-  const rows = [
-    renderHandSlotRow("Hero", "player1"),
-    renderHandSlotRow("Villain", "player2"),
-  ];
-  elements.selectedHands.replaceChildren(...rows);
-}
-
-function renderHandSlotRow(label, target) {
-  const row = document.createElement("div");
-  row.className = "hand-slot-row";
-  const name = document.createElement("span");
-  name.className = "hand-slot-label";
-  name.textContent = label;
-  row.append(name, renderHandSlot(target, 0), renderHandSlot(target, 1));
-  return row;
-}
-
-function renderHandSlot(target, index) {
-  const card = state.selectedHands[target][index];
-  const slot = document.createElement("button");
-  slot.type = "button";
-  slot.className = `hand-slot ${card ? `suit-${card.suit}` : ""}`;
-  slot.textContent = card ? `${rankLabels[card.rank] || card.rank}${suitSymbols[card.suit]}` : "-";
-  slot.classList.toggle(
-    "is-active",
-    state.activeHandSlot.target === target && state.activeHandSlot.index === index,
-  );
-  slot.addEventListener("click", () => setHandSlot(target, index));
-  return slot;
 }
 
 function toggleSpecifiedCard(card) {
@@ -774,6 +813,16 @@ function advanceHandSlot(target, index) {
 function setHandSlot(target, index) {
   state.activeHandSlot = { target, index };
   renderCardPicker();
+  renderCurrentFlip();
+}
+
+function clearAndSelectHandSlot(target, index) {
+  if (state.handMode !== "specified") return;
+
+  state.selectedHands[target][index] = null;
+  state.activeHandSlot = { target, index };
+  renderCardPicker();
+  startFlip();
 }
 
 function resetSpecifiedHands() {
