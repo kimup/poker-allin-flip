@@ -566,6 +566,13 @@ function handleBoardAction() {
 function openBoardAutomatically() {
   state.isOpeningBoard = true;
   renderActionButton();
+  renderCardPicker();
+
+  if (state.handMode === "specified") {
+    state.revealTimer = window.setTimeout(revealNextBoardCard, 500);
+    return;
+  }
+
   revealNextBoardCard();
 }
 
