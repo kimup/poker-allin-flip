@@ -346,6 +346,17 @@ h2 {
   margin-top: 12px;
 }
 
+.player-hand-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+}
+
+.player-hand-row .cards {
+  flex: 0 0 auto;
+}
+
 .board-cards {
   flex-wrap: wrap;
   gap: 8px;
@@ -438,11 +449,11 @@ h2 {
 
 .player-status {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 12px;
-  min-height: 60px;
-  margin-top: 10px;
+  align-content: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 108px;
+  margin-top: 12px;
 }
 
 .hand-name {
@@ -455,10 +466,9 @@ h2 {
 
 .equity-line {
   color: var(--accent);
-  font-size: clamp(1.25rem, 2.45vw, 2.1rem);
+  font-size: clamp(1.45rem, 2.8vw, 2.35rem);
   font-weight: 950;
   line-height: 1;
-  text-align: right;
   white-space: nowrap;
 }
 
@@ -909,6 +919,18 @@ h2 {
     margin-top: 6px;
   }
 
+  .player-hand-row {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .player-status {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    min-height: 56px;
+    margin-top: 4px;
+  }
+
   .card {
     width: clamp(30px, 10vw, 50px);
     padding: 4px;
@@ -938,17 +960,9 @@ h2 {
     line-height: 1.18;
   }
 
-  .player-status {
-    grid-template-columns: 1fr;
-    gap: 2px;
-    min-height: 56px;
-    margin-top: 4px;
-  }
-
   .equity-line {
     min-height: 1.15em;
     font-size: clamp(0.9rem, 4.7vw, 1.42rem);
-    text-align: left;
   }
 
   .equity-line.is-final-win,
