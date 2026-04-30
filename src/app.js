@@ -92,9 +92,6 @@ const elements = {
   flopStep: document.querySelector("#flopStep"),
   turnStep: document.querySelector("#turnStep"),
   riverStep: document.querySelector("#riverStep"),
-  winnerSummary: document.querySelector("#winnerSummary"),
-  winnerSubtext: document.querySelector("#winnerSubtext"),
-  winnerPanel: document.querySelector(".winner-panel"),
   modeDialog: document.querySelector("#modeDialog"),
   modeDialogTitle: document.querySelector("#modeDialogTitle"),
   modeDialogText: document.querySelector("#modeDialogText"),
@@ -147,7 +144,7 @@ function getSpecifiedHands() {
 
   const player1 = isCompleteHand(state.selectedHands.player1) ? state.selectedHands.player1 : [];
   const player2 = isCompleteHand(state.selectedHands.player2) ? state.selectedHands.player2 : [];
-  elements.handInputMessage.textContent = isSpecifiedHandReady() ? "" : "伏せカードを選択してください";
+  elements.handInputMessage.textContent = isSpecifiedHandReady() ? "" : "カードを選択してください";
   return {
     player1: [...player1],
     player2: [...player2],
@@ -654,9 +651,6 @@ function renderCurrentFlip() {
   if (state.revealedBoardCount < 5) {
     elements.resultTitle.textContent = streetName;
     elements.resultDetail.textContent = "";
-    elements.winnerSummary.textContent = "-";
-    elements.winnerSubtext.textContent = "";
-    elements.winnerPanel.classList.remove("is-final");
     if (shouldCalculateEquity) {
       scheduleEquityRender(flip, visibleBoard);
     }
@@ -700,13 +694,7 @@ function finishFlip(flip, score1, score2, playerOneName, playerTwoName) {
 
   elements.resultTitle.textContent = "River";
   elements.resultDetail.textContent = "";
-  elements.winnerSummary.textContent = resultTitle;
-  elements.winnerSubtext.textContent =
-    winner === "chop"
-      ? "引き分けを記録しました"
-      : "勝ち数を記録しました";
   renderFinalOutcome(winner);
-  elements.winnerPanel.classList.add("is-final");
   setWinnerUi(winner);
   renderStats();
   renderHistory();
