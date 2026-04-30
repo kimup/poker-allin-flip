@@ -35,6 +35,7 @@ const state = {
   streetDelayMs: 2000,
   handMode: "random",
   handBannerTimer: null,
+  pendingAction: null,
   activeHandSlot: {
     target: "player1",
     index: 0,
@@ -701,7 +702,7 @@ function renderCardPicker() {
     const key = cardKey(card);
     const currentCard = state.selectedHands[state.activeHandSlot.target][state.activeHandSlot.index];
     const isCurrentSlotCard = currentCard && cardKey(currentCard) === key;
-    const unavailable = selectedKeys.has(key);
+    const unavailable = selectedKeys.has(key) && !isCurrentSlotCard;
     button.type = "button";
     button.className = `picker-card suit-${card.suit}`;
     button.textContent = `${rankLabels[card.rank] || card.rank}${suitSymbols[card.suit]}`;
@@ -798,25 +799,51 @@ function requestModeChange(mode) {
   if (mode === state.mode || state.isOpeningBoard) return;
 
   const label = mode === "solo" ? "1人" : "2人";
-  state.pendingMode = mode;
-  elements.modeDialogTitle.textContent = `${label}モードに切り替えますか？`;
-  elements.modeDialogText.textContent = "現在のハンドはリセットされます。";
+  requestHistoryReset(`${label}モードに切り替えますか？`, () => {
+    setMode(mode);
+  });
+}
+
+function requestHandModeChange(mode) {
+  if (mode === state.handMode || state.isOpeningBoard) {
+    elements.handModeSelect.value = state.handMode;
+    return;
+  }
+
+  elements.handModeSelect.value = state.handMode;
+  requestHistoryReset(`${mode === "specified" ? "Specify" : "Random"}に切り替えますか？`, () => {
+    state.handMode = mode;
+    elements.handModeSelect.value = mode;
+    if (mode === "specified") {
+      resetSpecifiedHands();
+    }
+    renderCardPicker();
+    startFlip();
+  });
+}
+
+function requestHistoryReset(title, action) {
+  state.pendingAction = action;
+  elements.modeDialogTitle.textContent = title;
+  elements.modeDialogText.textContent = "履歴がリセットされますがよろしいですか？";
   elements.modeDialog.classList.remove("is-hidden");
 }
 
 function closeModeDialog() {
-  state.pendingMode = null;
+  state.pendingAction = null;
   elements.modeDialog.classList.add("is-hidden");
 }
 
 function confirmModeChange() {
-  if (state.pendingMode) {
-    setMode(state.pendingMode);
+  const action = state.pendingAction;
+  if (action) {
+    resetSession({ startNewHand: false });
+    action();
   }
   closeModeDialog();
 }
 
-function resetSession() {
+function resetSession(options = {}) {
   state.stats = {
     player1: 0,
     player2: 0,
@@ -827,22 +854,19 @@ function resetSession() {
   saveStoredSession();
   renderStats();
   renderHistory();
-  startFlip();
+  if (options.startNewHand !== false) {
+    startFlip();
+  }
 }
 
 elements.dealButton.addEventListener("click", handleBoardAction);
 elements.streetDelaySelect.addEventListener("change", () => {
   state.streetDelayMs = Number(elements.streetDelaySelect.value) || 2000;
 });
-elements.handModeSelect.addEventListener("change", () => {
-  state.handMode = elements.handModeSelect.value;
-  if (state.handMode === "specified") {
-    resetSpecifiedHands();
-  }
-  renderCardPicker();
-  startFlip();
+elements.handModeSelect.addEventListener("change", () => requestHandModeChange(elements.handModeSelect.value));
+elements.resetButton.addEventListener("click", () => {
+  requestHistoryReset("履歴をリセットしますか？", () => startFlip());
 });
-elements.resetButton.addEventListener("click", resetSession);
 elements.soloModeButton.addEventListener("click", () => requestModeChange("solo"));
 elements.duoModeButton.addEventListener("click", () => requestModeChange("duo"));
 elements.modeCancelButton.addEventListener("click", closeModeDialog);
