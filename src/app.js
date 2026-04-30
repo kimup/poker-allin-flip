@@ -569,7 +569,7 @@ function openBoardAutomatically() {
   renderCardPicker();
 
   if (state.handMode === "specified") {
-    state.revealTimer = window.setTimeout(revealNextBoardCard, 500);
+    state.revealTimer = window.setTimeout(revealNextBoardCard, 800);
     return;
   }
 
