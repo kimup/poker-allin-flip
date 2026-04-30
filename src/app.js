@@ -464,6 +464,8 @@ function clearWinnerUi() {
   elements.playerTwoPanel.classList.remove("is-winner");
   elements.playerOnePanel.classList.remove("is-locked");
   elements.playerTwoPanel.classList.remove("is-locked");
+  elements.playerOneEquity.classList.remove("is-final-win", "is-final-lose", "is-final-chop");
+  elements.playerTwoEquity.classList.remove("is-final-win", "is-final-lose", "is-final-chop");
   elements.playerOneBadge.classList.add("is-hidden");
   elements.playerTwoBadge.classList.add("is-hidden");
 }
@@ -701,11 +703,31 @@ function finishFlip(flip, score1, score2, playerOneName, playerTwoName) {
     winner === "chop"
       ? "引き分けを記録しました"
       : "勝ち数を記録しました";
+  renderFinalOutcome(winner);
   elements.winnerPanel.classList.add("is-final");
   setWinnerUi(winner);
   renderStats();
   renderHistory();
   saveStoredSession();
+}
+
+function renderFinalOutcome(winner) {
+  elements.playerOneEquity.classList.remove("is-final-win", "is-final-lose", "is-final-chop");
+  elements.playerTwoEquity.classList.remove("is-final-win", "is-final-lose", "is-final-chop");
+
+  if (winner === "chop") {
+    elements.playerOneEquity.textContent = "CHOP";
+    elements.playerTwoEquity.textContent = "CHOP";
+    elements.playerOneEquity.classList.add("is-final-chop");
+    elements.playerTwoEquity.classList.add("is-final-chop");
+    return;
+  }
+
+  const playerOneWon = winner === "player1";
+  elements.playerOneEquity.textContent = playerOneWon ? "WIN" : "LOSE";
+  elements.playerTwoEquity.textContent = playerOneWon ? "LOSE" : "WIN";
+  elements.playerOneEquity.classList.add(playerOneWon ? "is-final-win" : "is-final-lose");
+  elements.playerTwoEquity.classList.add(playerOneWon ? "is-final-lose" : "is-final-win");
 }
 
 function renderStreetMeter(revealedCount) {
