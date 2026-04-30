@@ -290,7 +290,6 @@ h2 {
 .player-panel,
 .board-panel,
 .history-panel,
-.winner-panel,
 .stat-card {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -641,36 +640,6 @@ h2 {
   background: rgba(24, 32, 35, 0.82);
 }
 
-.winner-panel {
-  display: grid;
-  gap: 6px;
-  margin: 12px 0;
-  padding: 14px;
-  background: rgba(16, 20, 22, 0.9);
-}
-
-.winner-panel strong {
-  color: var(--text);
-  font-size: clamp(1.5rem, 3.4vw, 2.7rem);
-  line-height: 1.05;
-}
-
-.winner-panel span {
-  color: var(--muted);
-  font-weight: 700;
-}
-
-.winner-panel span:empty {
-  display: none;
-}
-
-.winner-panel.is-final {
-  border-color: rgba(241, 196, 83, 0.72);
-  background:
-    linear-gradient(135deg, rgba(241, 196, 83, 0.14), transparent),
-    rgba(16, 20, 22, 0.94);
-}
-
 .history-heading h2 {
   font-size: 1rem;
 }
@@ -814,14 +783,15 @@ h2 {
 
 @media (max-width: 780px) {
   .app-shell {
-    width: min(100vw - 16px, 680px);
-    padding: 12px 0;
+    width: min(100vw - 12px, 680px);
+    padding: 8px 0;
   }
 
   .topbar {
     align-items: stretch;
     flex-direction: column;
-    gap: 12px;
+    gap: 8px;
+    margin-bottom: 8px;
   }
 
   .title-row {
@@ -836,7 +806,7 @@ h2 {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
   }
 
   .top-actions .deal-button {
@@ -852,35 +822,38 @@ h2 {
     width: auto;
   }
 
-  .player-grid,
-  .stats-area {
-    grid-template-columns: 1fr;
+  .player-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .hand-settings {
     grid-template-columns: 1fr;
+    margin-bottom: 8px;
+    padding: 8px;
   }
 
   .card-picker {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 7px;
-    max-height: 38vh;
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
+    grid-template-columns: repeat(13, minmax(0, 1fr));
+    gap: 3px;
+    margin: -2px 0 8px;
+    padding: 6px;
   }
 
   .picker-card {
-    min-height: 40px;
+    min-height: 28px;
+    padding: 0;
+    border-radius: 5px;
+    font-size: 0.58rem;
   }
 
   .table-area {
-    gap: 10px;
-    padding: 10px;
+    gap: 8px;
+    padding: 8px;
   }
 
   .player-panel,
   .board-panel {
-    padding: 10px;
+    padding: 8px;
   }
 
   .board-heading {
@@ -891,7 +864,7 @@ h2 {
   .deal-button {
     width: 100%;
     min-width: 0;
-    min-height: 64px;
+    min-height: 58px;
     padding-inline: 18px;
   }
 
@@ -900,25 +873,27 @@ h2 {
   }
 
   .cards {
-    gap: 7px;
-    min-height: 92px;
+    gap: 5px;
+    min-height: 70px;
+    margin-top: 8px;
   }
 
   .card {
-    width: clamp(42px, 14.5vw, 62px);
-    padding: 7px;
+    width: clamp(32px, 10.4vw, 54px);
+    padding: 5px;
+    border-radius: 6px;
   }
 
   .card-rank {
-    font-size: clamp(0.98rem, 4vw, 1.25rem);
+    font-size: clamp(0.78rem, 3vw, 1.05rem);
   }
 
   .card-suit {
-    font-size: clamp(1.45rem, 6vw, 2rem);
+    font-size: clamp(1.1rem, 4.6vw, 1.65rem);
   }
 
   .card-corner {
-    font-size: 0.78rem;
+    font-size: 0.66rem;
   }
 
   .board-cards .card:nth-child(3),
@@ -927,27 +902,28 @@ h2 {
   }
 
   .hand-name {
-    font-size: 0.88rem;
+    min-height: 2.35em;
+    margin-top: 6px;
+    font-size: 0.72rem;
+    line-height: 1.18;
   }
 
   .equity-line {
-    font-size: clamp(1.25rem, 7vw, 2rem);
+    min-height: 1.15em;
+    margin-top: 3px;
+    font-size: clamp(0.98rem, 5.2vw, 1.55rem);
   }
 
   .equity-line.is-final-win,
   .equity-line.is-final-lose,
   .equity-line.is-final-chop {
-    min-height: 48px;
-    font-size: clamp(1.7rem, 10vw, 2.6rem);
+    min-height: 38px;
+    padding: 6px 8px;
+    font-size: clamp(1.35rem, 7vw, 2.1rem);
   }
 
   .street-meter {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .winner-panel {
-    margin: 10px 0;
-    padding: 12px;
+    gap: 5px;
   }
 
   .stats-area {
@@ -992,11 +968,11 @@ h2 {
     width: 100%;
   }
 
-  .card-picker {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-
   .board-cards {
     gap: 6px;
+  }
+
+  .board-cards .card {
+    width: clamp(32px, 12vw, 48px);
   }
 }
