@@ -32,6 +32,7 @@ const state = {
   revealedBoardCount: 0,
   isOpeningBoard: false,
   revealTimer: null,
+  equityTimer: null,
   streetDelayMs: 2000,
   handMode: "random",
   handBannerTimer: null,
@@ -288,7 +289,7 @@ function calculateEquity(player1, player2, visibleBoard) {
   const knownCards = [...player1, ...player2, ...visibleBoard];
   const remainingDeck = getRemainingDeck(knownCards);
   const useSampling = missingBoardCount >= 3;
-  const sampleSize = visibleBoard.length === 0 ? 5000 : 1800;
+  const sampleSize = visibleBoard.length === 0 ? 1200 : 1800;
   const completions = useSampling
     ? Array.from({ length: sampleSize }, () => shuffle(remainingDeck).slice(0, missingBoardCount))
     : combinations(remainingDeck, missingBoardCount);
@@ -577,6 +578,13 @@ function stopBoardOpening() {
   state.isOpeningBoard = false;
 }
 
+function stopEquityCalculation() {
+  if (state.equityTimer) {
+    window.clearTimeout(state.equityTimer);
+  }
+  state.equityTimer = null;
+}
+
 function getRevealDelay(revealedCount) {
   if (revealedCount < 3) return 260;
   return state.streetDelayMs;
@@ -598,12 +606,11 @@ function renderCurrentFlip() {
   const shouldCalculateEquity =
     hasCompleteHands &&
     (state.revealedBoardCount === 0 || state.revealedBoardCount === 3 || state.revealedBoardCount >= 4);
-  const equity = shouldCalculateEquity ? calculateEquity(flip.player1, flip.player2, visibleBoard) : null;
   const playerOneName = state.mode === "solo" ? "Hero" : "Seat 1";
   const playerTwoName = state.mode === "solo" ? "Villain" : "Seat 2";
   const streetName = getStreetName(state.revealedBoardCount);
-  const equityPrefix = equity?.isEstimate ? "推定勝率" : "勝率";
 
+  stopEquityCalculation();
   elements.playerOneName.textContent = playerOneName;
   elements.playerTwoName.textContent = playerTwoName;
   elements.playerOneStatLabel.textContent = playerOneName;
@@ -614,16 +621,9 @@ function renderCurrentFlip() {
   renderBoard(flip.board, state.revealedBoardCount);
   elements.playerOneHand.textContent = describeScore(score1);
   elements.playerTwoHand.textContent = describeScore(score2);
-  if (equity) {
-    elements.playerOneEquity.textContent = `${equityPrefix} ${percent(equity.player1)}`;
-    elements.playerTwoEquity.textContent = `${equityPrefix} ${percent(equity.player2)}`;
-    clearWinnerUi();
-    setLeaderUi(equity);
-  } else {
-    elements.playerOneEquity.textContent = "";
-    elements.playerTwoEquity.textContent = "";
-    clearWinnerUi();
-  }
+  elements.playerOneEquity.textContent = "";
+  elements.playerTwoEquity.textContent = "";
+  clearWinnerUi();
   renderStreetMeter(state.revealedBoardCount);
 
   if (state.revealedBoardCount < 5) {
@@ -632,10 +632,26 @@ function renderCurrentFlip() {
     elements.winnerSummary.textContent = "-";
     elements.winnerSubtext.textContent = "";
     elements.winnerPanel.classList.remove("is-final");
+    if (shouldCalculateEquity) {
+      scheduleEquityRender(flip, visibleBoard);
+    }
     return;
   }
 
   finishFlip(flip, score1, score2, playerOneName, playerTwoName);
+}
+
+function scheduleEquityRender(flip, visibleBoard) {
+  state.equityTimer = window.setTimeout(() => {
+    if (state.currentFlip !== flip || state.revealedBoardCount !== visibleBoard.length) return;
+
+    const equity = calculateEquity(flip.player1, flip.player2, visibleBoard);
+    const equityPrefix = equity.isEstimate ? "推定勝率" : "勝率";
+    elements.playerOneEquity.textContent = `${equityPrefix} ${percent(equity.player1)}`;
+    elements.playerTwoEquity.textContent = `${equityPrefix} ${percent(equity.player2)}`;
+    clearWinnerUi();
+    setLeaderUi(equity);
+  }, 40);
 }
 
 function finishFlip(flip, score1, score2, playerOneName, playerTwoName) {
