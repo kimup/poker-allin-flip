@@ -431,9 +431,22 @@ h2 {
 .hand-name,
 .equity-line {
   min-height: 1.5em;
-  margin: 10px 0 0;
+  margin: 0;
   color: var(--muted);
   font-weight: 700;
+}
+
+.player-status {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  margin-top: 10px;
+}
+
+.hand-name {
+  min-width: 0;
 }
 
 .result-detail {
@@ -441,11 +454,12 @@ h2 {
 }
 
 .equity-line {
-  margin-top: 4px;
   color: var(--accent);
-  font-size: clamp(1.5rem, 3vw, 2.45rem);
+  font-size: clamp(1.25rem, 2.45vw, 2.1rem);
   font-weight: 950;
   line-height: 1;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .equity-line.is-final-win,
@@ -457,7 +471,7 @@ h2 {
   min-height: 54px;
   padding: 8px 14px;
   border-radius: 8px;
-  font-size: clamp(2rem, 4.5vw, 3.6rem);
+  font-size: clamp(1.75rem, 3.8vw, 3.1rem);
   line-height: 1;
 }
 
@@ -920,15 +934,21 @@ h2 {
 
   .hand-name {
     min-height: 2.2em;
-    margin-top: 4px;
     font-size: 0.68rem;
     line-height: 1.18;
   }
 
+  .player-status {
+    grid-template-columns: 1fr;
+    gap: 2px;
+    min-height: 56px;
+    margin-top: 4px;
+  }
+
   .equity-line {
     min-height: 1.15em;
-    margin-top: 2px;
     font-size: clamp(0.9rem, 4.7vw, 1.42rem);
+    text-align: left;
   }
 
   .equity-line.is-final-win,
