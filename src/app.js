@@ -58,6 +58,8 @@ const elements = {
   soloModeButton: document.querySelector("#soloModeButton"),
   duoModeButton: document.querySelector("#duoModeButton"),
   dealButton: document.querySelector("#dealButton"),
+  dealButtonKicker: document.querySelector("#dealButton .deal-button-kicker"),
+  dealButtonLabel: document.querySelector("#dealButton .deal-button-label"),
   streetDelaySelect: document.querySelector("#streetDelaySelect"),
   handSettings: document.querySelector("#handSettings"),
   handModeSelect: document.querySelector("#handModeSelect"),
@@ -437,10 +439,16 @@ function getStreetName(revealedCount) {
 }
 
 function getActionText() {
-  if (state.isOpeningBoard) return "Opening...";
-  if (state.handMode === "specified" && !isSpecifiedHandReady()) return "Select Hands";
-  if (state.revealedBoardCount === 5) return "Next Hand";
-  return "Board Open";
+  if (state.isOpeningBoard) {
+    return { kicker: "Revealing", label: "Opening..." };
+  }
+  if (state.handMode === "specified" && !isSpecifiedHandReady()) {
+    return { kicker: "Hand Setup", label: "Select Hands" };
+  }
+  if (state.revealedBoardCount === 5) {
+    return { kicker: "Start Over", label: "Next Hand" };
+  }
+  return { kicker: "Reveal Board", label: "Board Open" };
 }
 
 function setWinnerUi(winner) {
@@ -614,10 +622,16 @@ function getRevealDelay(revealedCount) {
 }
 
 function renderActionButton() {
-  elements.dealButton.textContent = getActionText();
+  const actionText = getActionText();
+  elements.dealButtonKicker.textContent = actionText.kicker;
+  elements.dealButtonLabel.textContent = actionText.label;
   elements.dealButton.disabled = state.isOpeningBoard || (state.handMode === "specified" && !isSpecifiedHandReady());
   elements.dealButton.classList.toggle("is-opening", state.isOpeningBoard);
   elements.dealButton.classList.toggle("is-next", !state.isOpeningBoard && state.revealedBoardCount === 5);
+  elements.dealButton.classList.toggle(
+    "is-disabled-action",
+    state.handMode === "specified" && !isSpecifiedHandReady(),
+  );
 }
 
 function renderCurrentFlip() {
