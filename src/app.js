@@ -57,8 +57,8 @@ const state = {
 const elements = {
   soloModeButton: document.querySelector("#soloModeButton"),
   duoModeButton: document.querySelector("#duoModeButton"),
+  helpButton: document.querySelector("#helpButton"),
   dealButton: document.querySelector("#dealButton"),
-  dealButtonKicker: document.querySelector("#dealButton .deal-button-kicker"),
   dealButtonLabel: document.querySelector("#dealButton .deal-button-label"),
   streetDelaySelect: document.querySelector("#streetDelaySelect"),
   handSettings: document.querySelector("#handSettings"),
@@ -100,6 +100,8 @@ const elements = {
   modeDialogText: document.querySelector("#modeDialogText"),
   modeCancelButton: document.querySelector("#modeCancelButton"),
   modeConfirmButton: document.querySelector("#modeConfirmButton"),
+  helpDialog: document.querySelector("#helpDialog"),
+  helpCloseButton: document.querySelector("#helpCloseButton"),
 };
 
 function createDeck() {
@@ -438,15 +440,15 @@ function getStreetName(revealedCount) {
 
 function getActionText() {
   if (state.isOpeningBoard) {
-    return { kicker: "Revealing", label: "Opening..." };
+    return "Opening...";
   }
   if (state.handMode === "specified" && !isSpecifiedHandReady()) {
-    return { kicker: "Hand Setup", label: "Select Hands" };
+    return "Select Hands";
   }
   if (state.revealedBoardCount === 5) {
-    return { kicker: "New Deal", label: "Next Hand" };
+    return "Next Hand";
   }
-  return { kicker: "Reveal Board", label: "Board Open" };
+  return "Board Open";
 }
 
 function setWinnerUi(winner) {
@@ -610,9 +612,7 @@ function getRevealDelay(revealedCount) {
 }
 
 function renderActionButton() {
-  const actionText = getActionText();
-  elements.dealButtonKicker.textContent = actionText.kicker;
-  elements.dealButtonLabel.textContent = actionText.label;
+  elements.dealButtonLabel.textContent = getActionText();
   elements.dealButton.disabled = state.isOpeningBoard || (state.handMode === "specified" && !isSpecifiedHandReady());
   elements.dealButton.classList.toggle("is-opening", state.isOpeningBoard);
   elements.dealButton.classList.toggle("is-next", !state.isOpeningBoard && state.revealedBoardCount === 5);
@@ -947,6 +947,14 @@ function confirmModeChange() {
   closeModeDialog();
 }
 
+function openHelpDialog() {
+  elements.helpDialog.classList.remove("is-hidden");
+}
+
+function closeHelpDialog() {
+  elements.helpDialog.classList.add("is-hidden");
+}
+
 function resetSession(options = {}) {
   state.stats = {
     player1: 0,
@@ -973,8 +981,13 @@ elements.resetButton.addEventListener("click", () => {
 });
 elements.soloModeButton.addEventListener("click", () => requestModeChange("solo"));
 elements.duoModeButton.addEventListener("click", () => requestModeChange("duo"));
+elements.helpButton.addEventListener("click", openHelpDialog);
+elements.helpCloseButton.addEventListener("click", closeHelpDialog);
 elements.modeCancelButton.addEventListener("click", closeModeDialog);
 elements.modeConfirmButton.addEventListener("click", confirmModeChange);
+elements.helpDialog.addEventListener("click", (event) => {
+  if (event.target === elements.helpDialog) closeHelpDialog();
+});
 
 loadStoredSession();
 initializeControls();

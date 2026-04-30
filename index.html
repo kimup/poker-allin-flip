@@ -13,12 +13,12 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <div>
+        <div class="title-row">
           <h1>Poker All-in Flip</h1>
+          <button id="helpButton" class="help-button" type="button" aria-label="このアプリについて">?</button>
         </div>
         <div class="top-actions">
           <button id="dealButton" class="deal-button" type="button">
-            <span class="deal-button-kicker">Reveal Board</span>
             <strong class="deal-button-label">Board Open</strong>
           </button>
           <label class="delay-control">
@@ -141,6 +141,21 @@
         <div class="dialog-actions">
           <button id="modeCancelButton" class="ghost-button" type="button">Cancel</button>
           <button id="modeConfirmButton" class="dialog-primary-button" type="button">Switch</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="helpDialog" class="dialog-backdrop is-hidden" role="dialog" aria-modal="true" aria-labelledby="helpDialogTitle">
+      <section class="dialog-panel help-dialog-panel">
+        <p class="panel-label">About</p>
+        <h2 id="helpDialogTitle">Poker All-in Flip</h2>
+        <div class="help-copy">
+          <p>テキサスホールデムのプリフロップオールインを、ランダムまたは指定ハンドで確認するためのアプリです。</p>
+          <p>Board Openでフロップ、ターン、リバーが順番に開きます。各ストリートで推定勝率と現在の役を確認できます。</p>
+          <p>1人モードはHero対Villainの運試し、2人モードは近くの2人で同じ画面を見て勝敗を決める用途です。</p>
+        </div>
+        <div class="dialog-actions">
+          <button id="helpCloseButton" class="dialog-primary-button" type="button">Close</button>
         </div>
       </section>
     </div>
