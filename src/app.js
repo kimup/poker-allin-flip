@@ -638,6 +638,7 @@ function renderCurrentFlip() {
   elements.playerOneStatLabel.textContent = playerOneName;
   elements.playerTwoStatLabel.textContent = playerTwoName;
   renderActionButton();
+  renderCardPicker();
   renderPlayerCards(elements.playerOneCards, flip.player1, "player1");
   renderPlayerCards(elements.playerTwoCards, flip.player2, "player2");
   renderBoard(flip.board, state.revealedBoardCount);
@@ -791,8 +792,9 @@ function renderHistoryDivider(text) {
 
 function renderCardPicker() {
   const specified = state.handMode === "specified";
+  const shouldShowPicker = specified && state.revealedBoardCount === 0;
   elements.handSettings.classList.toggle("is-specified", specified);
-  elements.cardPicker.classList.toggle("is-hidden", !specified);
+  elements.cardPicker.classList.toggle("is-hidden", !shouldShowPicker);
 
   if (!specified) {
     elements.cardPicker.replaceChildren();
