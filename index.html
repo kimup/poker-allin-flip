@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="テキサスホールデムのプリフロップオールインをランダムに試せるWebアプリ"
+    />
+    <title>Poker All-in Flip</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div class="title-row">
+          <h1>Poker All-in Flip</h1>
+          <button id="helpButton" class="help-button" type="button" aria-label="このアプリについて">?</button>
+        </div>
+        <div class="top-actions">
+          <button id="dealButton" class="deal-button" type="button">
+            <strong class="deal-button-label">Board Open</strong>
+          </button>
+          <label class="delay-control">
+            <span>Turn/River</span>
+            <select id="streetDelaySelect" aria-label="ターンとリバーの公開間隔">
+              <option value="1000">1s</option>
+              <option value="1500">1.5s</option>
+              <option value="2000" selected>2s</option>
+              <option value="2500">2.5s</option>
+              <option value="3000">3s</option>
+            </select>
+          </label>
+          <button id="resetButton" class="reset-button" type="button">Reset</button>
+          <div class="mode-switch" role="group" aria-label="モード切替">
+            <button id="soloModeButton" class="mode-button is-active" type="button">1人</button>
+            <button id="duoModeButton" class="mode-button" type="button">2人</button>
+          </div>
+        </div>
+      </header>
+
+      <section id="handSettings" class="hand-settings" aria-label="ハンド設定">
+        <label>
+          <span>Hand Mode</span>
+          <select id="handModeSelect">
+            <option value="random" selected>Random</option>
+            <option value="specified">Specify</option>
+          </select>
+        </label>
+        <p id="handInputMessage" class="hand-input-message"></p>
+      </section>
+      <section id="cardPicker" class="card-picker is-hidden" aria-label="カード一覧"></section>
+
+      <div id="handBanner" class="hand-banner is-hidden" aria-live="polite">Next Hand</div>
+
+      <section class="table-area" aria-label="ポーカーテーブル">
+        <div class="player-grid">
+          <section id="playerOnePanel" class="player-panel">
+            <div class="player-heading">
+              <div>
+                <h2 id="playerOneName">Hero</h2>
+              </div>
+            </div>
+            <div id="playerOneCards" class="cards" aria-label="first hand hole cards"></div>
+            <p id="playerOneHand" class="hand-name"></p>
+            <p id="playerOneEquity" class="equity-line"></p>
+          </section>
+
+          <section id="playerTwoPanel" class="player-panel">
+            <div class="player-heading">
+              <div>
+                <h2 id="playerTwoName">Villain</h2>
+              </div>
+            </div>
+            <div id="playerTwoCards" class="cards" aria-label="second hand hole cards"></div>
+            <p id="playerTwoHand" class="hand-name"></p>
+            <p id="playerTwoEquity" class="equity-line"></p>
+          </section>
+        </div>
+
+        <section class="board-panel">
+          <div class="board-heading">
+            <div>
+              <p class="panel-label">Board</p>
+              <h2 id="resultTitle">Preflop</h2>
+            </div>
+          </div>
+          <div id="boardCards" class="cards board-cards" aria-label="community cards"></div>
+          <div class="street-meter" aria-label="ストリート進行">
+            <span id="preflopStep" class="street-step is-active">Preflop</span>
+            <span id="flopStep" class="street-step">Flop</span>
+            <span id="turnStep" class="street-step">Turn</span>
+            <span id="riverStep" class="street-step">River</span>
+          </div>
+          <p id="resultDetail" class="result-detail"></p>
+        </section>
+      </section>
+
+      <section class="winner-panel" aria-label="勝敗結果">
+        <p class="panel-label">Result</p>
+        <strong id="winnerSummary">-</strong>
+        <span id="winnerSubtext"></span>
+      </section>
+
+      <section class="stats-area" aria-label="セッション統計">
+        <article class="stat-card">
+          <p id="playerOneStatLabel" class="stat-label">Hero</p>
+          <strong id="playerOneWins">0</strong>
+          <span>wins</span>
+        </article>
+        <article class="stat-card">
+          <p id="playerTwoStatLabel" class="stat-label">Villain</p>
+          <strong id="playerTwoWins">0</strong>
+          <span>wins</span>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Chops</p>
+          <strong id="chops">0</strong>
+          <span>ties</span>
+        </article>
+        <article class="stat-card">
+          <p class="stat-label">Win Rate</p>
+          <strong id="winRate">0%</strong>
+          <span id="flipCount">0 flips</span>
+        </article>
+      </section>
+
+      <section class="history-panel" aria-label="直近の結果">
+        <div class="history-heading">
+          <h2>Recent Flips</h2>
+        </div>
+        <ol id="historyList" class="history-list"></ol>
+      </section>
+    </main>
+
+    <div id="modeDialog" class="dialog-backdrop is-hidden" role="dialog" aria-modal="true" aria-labelledby="modeDialogTitle">
+      <section class="dialog-panel">
+        <p class="panel-label">Mode Change</p>
+        <h2 id="modeDialogTitle">モードを切り替えますか？</h2>
+        <p id="modeDialogText">現在のハンドはリセットされます。</p>
+        <div class="dialog-actions">
+          <button id="modeCancelButton" class="ghost-button" type="button">Cancel</button>
+          <button id="modeConfirmButton" class="dialog-primary-button" type="button">Switch</button>
+        </div>
+      </section>
+    </div>
+
+    <div id="helpDialog" class="dialog-backdrop is-hidden" role="dialog" aria-modal="true" aria-labelledby="helpDialogTitle">
+      <section class="dialog-panel help-dialog-panel">
+        <p class="panel-label">About</p>
+        <h2 id="helpDialogTitle">Poker All-in Flip</h2>
+        <div class="help-copy">
+          <p>テキサスホールデムのプリフロップオールインを、ランダムまたは指定ハンドで確認するためのアプリです。</p>
+          <p>Board Openでフロップ、ターン、リバーが順番に開きます。各ストリートで推定勝率と現在の役を確認できます。</p>
+          <p>1人モードはHero対Villainの運試し、2人モードは近くの2人で同じ画面を見て勝敗を決める用途です。</p>
+        </div>
+        <div class="dialog-actions">
+          <button id="helpCloseButton" class="dialog-primary-button" type="button">Close</button>
+        </div>
+      </section>
+    </div>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
